@@ -43,8 +43,8 @@
 
                             <!-- Top row, Column 0: Base IP TextBlock and Scan button in a horizontal StackPanel -->
                             <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Horizontal" HorizontalAlignment="Center" Margin="10">
-                                <TextBlock x:Name="baseIPTextBlock" 
-                       Text="Base IP: (unknown)" 
+                                <TextBox x:Name="baseIPTextBlock" 
+                       Text="(unknown)" 
                        FontWeight="Bold" 
                        Margin="0,0,10,0" 
                        VerticalAlignment="Center"/>
@@ -53,6 +53,7 @@
 
                             <!-- Top row, Column 1: Cancel and Exit buttons -->
                             <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center" Margin="10">
+                                <Button x:Name="openWebViewButton" Content="Open WebView" Click="OnOpenWebViewButtonClicked" Margin="5"/>
                                 <Button Content="Cancel" Click="OnCancelarButtonClicked" Margin="5"/>
                                 <Button Content="Exit" Click="OnExitButtonClicked" Margin="5"/>
                             </StackPanel>
@@ -91,7 +92,7 @@
 
                             <!-- ListView for Ports (Column 1) -->
                             <Border Grid.Row="2" Grid.Column="1" BorderBrush="LightCoral" BorderThickness="2">
-                                <ListView x:Name="portsListView" ScrollViewer.VerticalScrollBarVisibility="Auto">
+                                <ListView x:Name="portsListView" ScrollViewer.VerticalScrollBarVisibility="Auto" SelectionMode="Single" SelectionChanged="PortsListView_SelectionChanged">
                                     <ListView.ItemTemplate>
                                         <DataTemplate>
                                             <Grid Background="Transparent" Margin="5">

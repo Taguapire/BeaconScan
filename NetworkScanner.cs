@@ -34,12 +34,12 @@ namespace BeaconScan
             }
             return "unknown";
         }
-        
+
         // Escaneo de puertos TCP y UDP
-        public static async Task<List<PortInfo>> ScanPortsAsync(string ip, IEnumerable<int> portNumbers, CancellationToken cancellationToken)
+        public static async Task<List<PortDetails>> ScanPortsAsync(string ip, IEnumerable<int> portNumbers, CancellationToken cancellationToken)
         {
-            var openPorts = new List<PortInfo>();
-            var portRegistry = new PortRegistry(); // Instancia para obtener información de puertos
+            var openPorts = new List<PortDetails>();
+            var portRegistry = new PortRegistry();
 
             var tasks = new List<Task>();
             foreach (var port in portNumbers)
@@ -53,7 +53,16 @@ namespace BeaconScan
 
                     if (isTcpOpen || isUdpOpen)
                     {
-                        var portDetails = portRegistry.FindByPortNumber(port);
+                        var portInfo = portRegistry.FindByPortNumber(port);
+
+                        // Convertimos PortInfo a PortDetails
+                        var portDetails = new PortDetails
+                        {
+                            Protocol = portInfo.Protocol,
+                            PortNumber = portInfo.PortNumber,
+                            ServiceName = portInfo.ServiceName
+                        };
+
                         lock (openPorts)
                         {
                             openPorts.Add(portDetails);
@@ -65,6 +74,7 @@ namespace BeaconScan
             await Task.WhenAll(tasks);
             return openPorts;
         }
+
 
         // Método para verificar si un puerto TCP está abierto
         private static async Task<bool> IsTcpPortOpenAsync(string ip, int port, int timeout)

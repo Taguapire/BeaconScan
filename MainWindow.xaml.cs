@@ -16,7 +16,8 @@ using System.Threading.Tasks;
 using System.Threading;
 using BeaconScan;
 using System.Buffers.Text;
-using Windows.UI.Core; // Asegúrate de tener la referencia a Windows.UI.Core para el Dispatcher
+using Windows.UI.Core;
+using System.Diagnostics; // Asegúrate de tener la referencia a Windows.UI.Core para el Dispatcher
 
 namespace BeaconScan
 {
@@ -29,6 +30,7 @@ namespace BeaconScan
         // Instancia de SshManager
         private SftpManager? _sftpManager;
 
+        private string? _selectedIp; // Variable global para almacenar la IP seleccionada
         // Rutas base locales y remotas que puedes ajustar según tu entorno.
         // Variables globales
         private string localDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
@@ -42,7 +44,7 @@ namespace BeaconScan
         {
             this.InitializeComponent();
             baseIp = NetworkScanner.GetLocalBaseIP();
-            baseIPTextBlock.Text = "Base IP: " + baseIp;
+            baseIPTextBlock.Text = baseIp;
 
             // Si la Base IP es "unknown", deshabilitamos el botón Scan (o todos los que consideres).
             if (baseIp == "unknown")
@@ -72,6 +74,7 @@ namespace BeaconScan
             try
             {
                 // Pasamos la Base IP dinámica como parámetro a ScanNetworkAsync.
+                baseIp = baseIPTextBlock.Text;
                 var activeIps = await NetworkScanner.ScanNetworkAsync(baseIp, _cancellationTokenSource.Token);
 
                 foreach (var ip in activeIps)
@@ -100,6 +103,97 @@ namespace BeaconScan
             }
         }
 
+        private async Task<(bool Success, string Username, string Password)> ShowCredentialsDialogAsync(string ip, int port)
+        {
+            var dialog = new CredentialsDialog
+            {
+                XamlRoot = this.Content.XamlRoot
+            };
+
+            var result = await dialog.ShowAsync();
+
+            if (result == ContentDialogResult.Primary)
+            {
+                string username = dialog.UsernameTextBox.Text;
+                string password = dialog.PasswordBox.Password;
+                return (true, username, password);
+            }
+
+            return (false, string.Empty, string.Empty);
+        }
+
+
+        private void OnOpenWebViewButtonClicked(object sender, RoutedEventArgs e)
+        {
+            if (!string.IsNullOrEmpty(_selectedIp) && portsListView.SelectedItem is PortDetails selectedPort)
+            {
+                Debug.WriteLine($"IP seleccionada: {_selectedIp}");
+                Debug.WriteLine($"Puerto seleccionado: {selectedPort.PortNumber}");
+
+                // Decidir según el puerto
+                switch (selectedPort.PortNumber)
+                {
+                    case 80: // HTTP
+                    case 8080: // HTTP Proxy
+                        string httpUrl = $"http://{_selectedIp}:{selectedPort.PortNumber}/";
+                        Debug.WriteLine($"Abriendo HTTP en: {httpUrl}");
+                        var httpWebViewWindow = new WebViewWindow(httpUrl);
+                        httpWebViewWindow.Activate();
+                        break;
+
+                    case 554: // RTSP (Streaming)
+                              // Mostrar diálogo para credenciales
+                        var credentials = await ShowCredentialsDialogAsync(_selectedIp, selectedPort.PortNumber);
+
+                        if (credentials.Success) // Si el usuario ingresó credenciales
+                        {
+                            // Construir la URL RTSP
+                            string rtspUrl = $"rtsp://{credentials.Username}:{credentials.Password}@{_selectedIp}:{selectedPort.PortNumber}/";
+                            Debug.WriteLine($"Intentando reproducir RTSP: {rtspUrl}");
+
+                            // Abrir la ventana del visor RTSP
+                            var rtspViewerPage = new RtspViewerPage();
+                            rtspViewerPage.PlayStream(rtspUrl); // Iniciar el stream en la página
+
+                            // Asignar la página al contenido actual de la ventana principal
+                            ((MainWindow)App.Current.MainWindow).Content = rtspViewerPage;
+                        }
+                        else
+                        {
+                            Debug.WriteLine("El usuario canceló el ingreso de credenciales.");
+                            statusText.Text = "Conexión RTSP cancelada por el usuario.";
+                        }
+                        break;
+
+
+                    default:
+                        statusText.Text = "El puerto seleccionado no está configurado para manejarlo automáticamente.";
+                        Debug.WriteLine($"Puerto no manejado automáticamente: {selectedPort.PortNumber}");
+                        break;
+                }
+            }
+            else
+            {
+                statusText.Text = "Por favor, selecciona una IP y un puerto antes de continuar.";
+                Debug.WriteLine("No se seleccionó una IP o un puerto.");
+            }
+        }
+
+        private void PortsListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            var selectedItem = portsListView.SelectedItem;
+            if (selectedItem != null && selectedItem is PortDetails selectedPort)
+            {
+                statusText.Text = $"Elemento seleccionado: {selectedPort.ServiceName}";
+                Debug.WriteLine($"Seleccionado correctamente: {selectedPort.ServiceName}, Protocolo: {selectedPort.Protocol}, Puerto: {selectedPort.PortNumber}");
+            }
+            else
+            {
+                statusText.Text = "No se seleccionó ningún elemento.";
+                System.Diagnostics.Debug.WriteLine("El `SelectedItem` es null o no es del tipo PortDetails.");
+            }
+        }
+
         private void OnExitButtonClicked(object sender, RoutedEventArgs e)
         {
             Application.Current.Exit();
@@ -109,6 +203,9 @@ namespace BeaconScan
         {
             if (ipListView.SelectedItem is string selectedIp)
             {
+                _selectedIp = selectedIp; // Actualizamos la IP seleccionada
+                Debug.WriteLine($"IP seleccionada (actualizada): {_selectedIp}");
+
                 _cancellationTokenSource = new CancellationTokenSource();
 
                 statusText.Text = $"Escaneando puertos para {selectedIp}...";
@@ -117,20 +214,26 @@ namespace BeaconScan
 
                 try
                 {
-                    // Instanciamos PortRegistry para obtener los puertos registrados
                     var portRegistry = new PortRegistry();
                     var registeredPorts = portRegistry.GetRegisteredPortNumbers();
-
-                    // Escaneamos únicamente los puertos registrados
                     var openPorts = await NetworkScanner.ScanPortsAsync(selectedIp, registeredPorts, _cancellationTokenSource.Token);
-
-                    // Llenamos la lista con los resultados
-                    portsListView.Items.Clear();
 
                     foreach (var port in openPorts)
                     {
-                        var portDetails = portRegistry.FindByPortNumber(port.PortNumber);
+                        // Encontramos información del puerto usando PortRegistry
+                        var portInfo = portRegistry.FindByPortNumber(port.PortNumber);
+
+                        // Convertimos PortInfo a PortDetails
+                        var portDetails = new PortDetails
+                        {
+                            Protocol = portInfo.Protocol,
+                            PortNumber = portInfo.PortNumber,
+                            ServiceName = portInfo.ServiceName
+                        };
+
+                        // Agregamos el PortDetails al ListView
                         portsListView.Items.Add(portDetails);
+                        Debug.WriteLine($"Agregado a portsListView: {portDetails.ServiceName}");
                     }
 
                     statusText.Text = "Escaneo de puertos completado.";
@@ -151,7 +254,13 @@ namespace BeaconScan
                     _cancellationTokenSource = null;
                 }
             }
+            else
+            {
+                Debug.WriteLine("No se seleccionó ninguna IP.");
+                _selectedIp = null; // Reinicia la variable si no hay selección
+            }
         }
+
 
         private void OnCancelarButtonClicked(object sender, RoutedEventArgs e)
         {
@@ -415,8 +524,6 @@ namespace BeaconScan
                 }
             }
         }
-
-
 
 
         private void LocalDirListBox_DoubleTapped(object sender, DoubleTappedRoutedEventArgs e)

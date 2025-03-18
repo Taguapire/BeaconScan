@@ -12,6 +12,11 @@
     <EnableMsixTooling>true</EnableMsixTooling>
     <Nullable>enable</Nullable>
   </PropertyGroup>
+  <ItemGroup>
+    <None Remove="CredentialsDialog .xaml" />
+    <None Remove="RtspViewerWindow.xaml" />
+    <None Remove="WebViewWindow.xaml" />
+  </ItemGroup>
 
   <ItemGroup>
     <Content Include="Assets\SplashScreen.scale-200.png" />
@@ -36,9 +41,27 @@
     <ProjectCapability Include="Msix" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="FluentFTP" Version="52.1.0" />
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.3124.44" />
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.1742" />
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.6.250228001" />
+    <PackageReference Include="SharpRTSP" Version="1.8.0" />
     <PackageReference Include="SSH.NET" Version="2024.2.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <Page Update="RtspViewerWindow.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <Page Update="CredentialsDialog .xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <Page Update="WebViewWindow.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
 
   <!--
@@ -61,9 +84,15 @@
     <Company>PENTALPHA EIRL</Company>
     <Description>Programa de Scanner IP en una RED 0/24</Description>
     <Copyright>LUIS VASQUEZ CONSULTORES EIRL</Copyright>
-    <PackageCertificateThumbprint>90A5ADFF691FEBDA3124303DEE6A7D4397858142</PackageCertificateThumbprint>
     <PackageCertificateKeyFile>BeaconScan_TemporaryKey.pfx</PackageCertificateKeyFile>
     <AppxPackageSigningEnabled>True</AppxPackageSigningEnabled>
     <SupportedOSPlatformVersion>10.0.18362.0</SupportedOSPlatformVersion>
+    <GenerateAppInstallerFile>False</GenerateAppInstallerFile>
+    <AppxPackageSigningTimestampDigestAlgorithm>SHA256</AppxPackageSigningTimestampDigestAlgorithm>
+    <AppxAutoIncrementPackageRevision>False</AppxAutoIncrementPackageRevision>
+    <AppxSymbolPackageEnabled>False</AppxSymbolPackageEnabled>
+    <GenerateTestArtifacts>True</GenerateTestArtifacts>
+    <AppxBundle>Never</AppxBundle>
+    <HoursBetweenUpdateChecks>0</HoursBetweenUpdateChecks>
   </PropertyGroup>
 </Project>
