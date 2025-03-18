@@ -42,11 +42,12 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="FluentFTP" Version="52.1.0" />
+    <PackageReference Include="LibVLCSharp" Version="3.9.2" />
     <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.3124.44" />
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.1742" />
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.6.250228001" />
-    <PackageReference Include="SharpRTSP" Version="1.8.0" />
     <PackageReference Include="SSH.NET" Version="2024.2.0" />
+    <PackageReference Include="VideoLAN.LibVLC.Windows" Version="3.0.21" />
   </ItemGroup>
   <ItemGroup>
     <Page Update="RtspViewerWindow.xaml">

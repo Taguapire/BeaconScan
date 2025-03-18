@@ -12,31 +12,59 @@ using Microsoft.UI.Xaml.Data;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Navigation;
+using LibVLCSharp.Shared;
+using System.Runtime.InteropServices;
+using System.Diagnostics;
+
 
 namespace BeaconScan
 {
-    public sealed partial class RtspViewerPage : Page
+    public sealed partial class RtspViewerPage : Window
     {
+        private LibVLC _libVLC;
+        private MediaPlayer _mediaPlayer;
+
         public RtspViewerPage()
         {
-            this.InitializeComponent();
+            InitializeComponent();
+            Core.Initialize();
+
+            // Inicializar LibVLC y MediaPlayer
+            _libVLC = new LibVLC();
+            _mediaPlayer = new MediaPlayer(_libVLC);
+
+            // Configurar el destino de renderizado para SwapChainPanel
+            IntPtr videoHwnd = GetSwapChainPanelHandle(VideoPanel);
+            _mediaPlayer.Hwnd = videoHwnd;
         }
 
-        public async void PlayStream(string rtspUrl)
+        public void PlayStream(string rtspUrl)
         {
             try
             {
-                LoadingText.Visibility = Microsoft.UI.Xaml.Visibility.Collapsed;
-                RtspWebView.Visibility = Microsoft.UI.Xaml.Visibility.Visible;
-
-                // Inicializa WebView2 y carga la URL
-                await RtspWebView.EnsureCoreWebView2Async();
-                RtspWebView.Source = new Uri(rtspUrl);
+                var media = new Media(_libVLC, new Uri(rtspUrl));
+                _mediaPlayer.Play(media);
+                Debug.WriteLine($"Reproduciendo stream RTSP: {rtspUrl}");
             }
             catch (Exception ex)
             {
-                LoadingText.Text = $"Error al cargar el stream: {ex.Message}";
+                Debug.WriteLine($"Error al intentar reproducir el stream RTSP: {ex.Message}");
             }
         }
+
+        //protected override void OnClosed(EventArgs e)
+        //{
+        //    base.OnClosed(e);
+        //    _mediaPlayer?.Dispose();
+        //    _libVLC?.Dispose();
+        //}
+
+        private IntPtr GetSwapChainPanelHandle(SwapChainPanel swapChainPanel)
+        {
+            // Utiliza Reflection para obtener el puntero nativo (esta técnica es necesaria en WinUI)
+            var swapChainPanelNative = Marshal.GetIUnknownForObject(swapChainPanel);
+            return swapChainPanelNative;
+        }
+
     }
 }

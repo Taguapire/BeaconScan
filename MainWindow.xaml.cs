@@ -24,6 +24,9 @@ namespace BeaconScan
 
     public sealed partial class MainWindow : Window
     {
+
+        // public static MainWindow Instance { get; private set; }
+        
         private string baseIp;
         // Instancia de SshManager
         private SshManager? _sshManager;
@@ -123,7 +126,7 @@ namespace BeaconScan
         }
 
 
-        private void OnOpenWebViewButtonClicked(object sender, RoutedEventArgs e)
+        private async void OnOpenWebViewButtonClicked(object sender, RoutedEventArgs e)
         {
             if (!string.IsNullOrEmpty(_selectedIp) && portsListView.SelectedItem is PortDetails selectedPort)
             {
@@ -142,21 +145,16 @@ namespace BeaconScan
                         break;
 
                     case 554: // RTSP (Streaming)
-                              // Mostrar diálogo para credenciales
                         var credentials = await ShowCredentialsDialogAsync(_selectedIp, selectedPort.PortNumber);
 
                         if (credentials.Success) // Si el usuario ingresó credenciales
                         {
-                            // Construir la URL RTSP
                             string rtspUrl = $"rtsp://{credentials.Username}:{credentials.Password}@{_selectedIp}:{selectedPort.PortNumber}/";
                             Debug.WriteLine($"Intentando reproducir RTSP: {rtspUrl}");
 
-                            // Abrir la ventana del visor RTSP
-                            var rtspViewerPage = new RtspViewerPage();
-                            rtspViewerPage.PlayStream(rtspUrl); // Iniciar el stream en la página
-
-                            // Asignar la página al contenido actual de la ventana principal
-                            ((MainWindow)App.Current.MainWindow).Content = rtspViewerPage;
+                            var rtspViewerWindow = new RtspViewerPage();
+                            rtspViewerWindow.PlayStream(rtspUrl);
+                            rtspViewerWindow.Activate();
                         }
                         else
                         {
@@ -164,7 +162,6 @@ namespace BeaconScan
                             statusText.Text = "Conexión RTSP cancelada por el usuario.";
                         }
                         break;
-
 
                     default:
                         statusText.Text = "El puerto seleccionado no está configurado para manejarlo automáticamente.";
