@@ -56,12 +56,14 @@ namespace BeaconScan
                         var portInfo = portRegistry.FindByPortNumber(port);
 
                         // Convertimos PortInfo a PortDetails
+#pragma warning disable CS8601 // Possible null reference assignment.
                         var portDetails = new PortDetails
                         {
                             Protocol = portInfo.Protocol,
                             PortNumber = portInfo.PortNumber,
                             ServiceName = portInfo.ServiceName
                         };
+#pragma warning restore CS8601 // Possible null reference assignment.
 
                         lock (openPorts)
                         {

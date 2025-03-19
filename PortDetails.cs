@@ -8,8 +8,8 @@ namespace BeaconScan
 {
     public class PortDetails
     {
-        public string Protocol { get; set; }
+        public string? Protocol { get; set; }
         public int PortNumber { get; set; }
-        public string ServiceName { get; set; }
+        public string? ServiceName { get; set; }
     }
 }

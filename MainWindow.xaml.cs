@@ -2,21 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Controls.Primitives;
-using Microsoft.UI.Xaml.Data;
 using Microsoft.UI.Xaml.Input;
-using Microsoft.UI.Xaml.Media;
-using Microsoft.UI.Xaml.Navigation;
 using System.Threading.Tasks;
 using System.Threading;
-using BeaconScan;
-using System.Buffers.Text;
-using Windows.UI.Core;
 using System.Diagnostics; // Asegúrate de tener la referencia a Windows.UI.Core para el Dispatcher
 
 namespace BeaconScan
@@ -163,6 +153,39 @@ namespace BeaconScan
                         }
                         break;
 
+                    case 3389: // RDP
+                               // Mostrar un cuadro de diálogo para ingresar el dominio/usuario y contraseña
+                        var rdpCredentials = await ShowCredentialsDialogAsync(_selectedIp, selectedPort.PortNumber);
+
+                        if (rdpCredentials.Success)
+                        {
+                            Debug.WriteLine($"Iniciando conexión RDP con {_selectedIp}");
+
+                            // Crear un archivo RDP dinámico
+                            string rdpFilePath = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "tempRdpConnection.rdp");
+                            string rdpContent = $"full address:s:{_selectedIp}\nusername:s:{rdpCredentials.Username}\n";
+
+                            System.IO.File.WriteAllText(rdpFilePath, rdpContent);
+
+                            // Abrir mstsc.exe con el archivo RDP generado
+                            try
+                            {
+                                System.Diagnostics.Process.Start("mstsc.exe", rdpFilePath);
+                                statusText.Text = "Conexión RDP iniciada.";
+                            }
+                            catch (Exception ex)
+                            {
+                                Debug.WriteLine($"Error al iniciar RDP: {ex.Message}");
+                                statusText.Text = "Error al iniciar la conexión RDP.";
+                            }
+                        }
+                        else
+                        {
+                            Debug.WriteLine("El usuario canceló el ingreso de credenciales.");
+                            statusText.Text = "Conexión RDP cancelada por el usuario.";
+                        }
+                        break;
+
                     default:
                         statusText.Text = "El puerto seleccionado no está configurado para manejarlo automáticamente.";
                         Debug.WriteLine($"Puerto no manejado automáticamente: {selectedPort.PortNumber}");
@@ -175,6 +198,7 @@ namespace BeaconScan
                 Debug.WriteLine("No se seleccionó una IP o un puerto.");
             }
         }
+
 
         private void PortsListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
@@ -221,12 +245,14 @@ namespace BeaconScan
                         var portInfo = portRegistry.FindByPortNumber(port.PortNumber);
 
                         // Convertimos PortInfo a PortDetails
+#pragma warning disable CS8601 // Possible null reference assignment.
                         var portDetails = new PortDetails
                         {
                             Protocol = portInfo.Protocol,
                             PortNumber = portInfo.PortNumber,
                             ServiceName = portInfo.ServiceName
                         };
+#pragma warning restore CS8601 // Possible null reference assignment.
 
                         // Agregamos el PortDetails al ListView
                         portsListView.Items.Add(portDetails);
@@ -440,14 +466,20 @@ namespace BeaconScan
                 return;
             }
 
+#pragma warning disable CS8600 // Converting null literal or possible null value to non-nullable type.
             string selectedFile = localDirListBox.SelectedItem.ToString();
+#pragma warning restore CS8600 // Converting null literal or possible null value to non-nullable type.
+#pragma warning disable CS8604 // Possible null reference argument.
             string localFilePath = Path.Combine(localDirectory, selectedFile);
+#pragma warning restore CS8604 // Possible null reference argument.
             string remoteFilePath = remoteDirectory.TrimEnd('/') + "/" + selectedFile;
 
             progressRing.IsActive = true; // Mostrar indicador 
             try
             {
+#pragma warning disable CS8602 // Dereference of a possibly null reference.
                 await _sftpManager.UploadFileAsync(localFilePath, remoteFilePath);
+#pragma warning restore CS8602 // Dereference of a possibly null reference.
                 UpdateStatus($"Archivo '{selectedFile}' subido correctamente.");
                 await LoadRemoteFiles(remoteDirectory);
             }
@@ -471,13 +503,19 @@ namespace BeaconScan
                 return;
             }
 
+#pragma warning disable CS8600 // Converting null literal or possible null value to non-nullable type.
             string selectedFile = remoteDirListBox.SelectedItem.ToString();
+#pragma warning restore CS8600 // Converting null literal or possible null value to non-nullable type.
             string remoteFilePath = remoteDirectory.TrimEnd('/') + "/" + selectedFile;
+#pragma warning disable CS8604 // Possible null reference argument.
             string localFilePath = Path.Combine(localDirectory, selectedFile);
+#pragma warning restore CS8604 // Possible null reference argument.
 
             try
             {
+#pragma warning disable CS8602 // Dereference of a possibly null reference.
                 await _sftpManager.DownloadFileAsync(remoteFilePath, localFilePath);
+#pragma warning restore CS8602 // Dereference of a possibly null reference.
                 UpdateStatus($"Archivo '{selectedFile}' descargado correctamente.");
                 await LoadLocalFiles(localDirectory);
             }
@@ -509,7 +547,9 @@ namespace BeaconScan
                     else if (selectedItem.Type == "D")
                     {
                         // Navegar al directorio seleccionado
+#pragma warning disable CS8604 // Possible null reference argument.
                         remoteDirectory = Path.Combine(remoteDirectory, selectedItem.Name).Replace('\\', '/');
+#pragma warning restore CS8604 // Possible null reference argument.
                     }
 
                     // Recargar archivos del nuevo directorio
@@ -535,7 +575,9 @@ namespace BeaconScan
                 else if (selectedItem.Type == "D")
                 {
                     // Navegar al directorio seleccionado
+#pragma warning disable CS8604 // Possible null reference argument.
                     localDirectory = Path.Combine(localDirectory, selectedItem.Name);
+#pragma warning restore CS8604 // Possible null reference argument.
                 }
 
                 // Cargar los archivos del nuevo directorio
@@ -559,8 +601,12 @@ namespace BeaconScan
         {
             if (localDirectory != Path.GetPathRoot(localDirectory)) // Evitar salir de la raíz local
             {
+#pragma warning disable CS8601 // Possible null reference assignment.
                 localDirectory = Path.GetDirectoryName(localDirectory);
+#pragma warning restore CS8601 // Possible null reference assignment.
+#pragma warning disable CS8604 // Possible null reference argument.
                 _ = LoadLocalFiles(localDirectory);
+#pragma warning restore CS8604 // Possible null reference argument.
             }
         }
 
@@ -576,7 +622,7 @@ namespace BeaconScan
             UpdateStatus($"Error durante {operation}: {ex.Message}");
         }
 
-        private async Task<string> ShowDirectoryDialogAsync()
+        private async Task<string?> ShowDirectoryDialogAsync()
         {
             // Crear el ContentDialog
             var dialog = new ContentDialog

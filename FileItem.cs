@@ -8,7 +8,7 @@ namespace BeaconScan
 {
     public class FileItem
     {
-        public string Name { get; set; }
-        public string Type { get; set; } // "D" para Directorio, "F" para Archivo
+        public string? Name { get; set; }
+        public string? Type { get; set; } // "D" para Directorio, "F" para Archivo
     }
 }
