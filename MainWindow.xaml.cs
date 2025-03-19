@@ -139,7 +139,7 @@ namespace BeaconScan
 
                         if (credentials.Success) // Si el usuario ingresó credenciales
                         {
-                            string rtspUrl = $"rtsp://{credentials.Username}:{credentials.Password}@{_selectedIp}:{selectedPort.PortNumber}/";
+                            string rtspUrl = $"rtsp://{credentials.Username}:{credentials.Password}@{_selectedIp}:{selectedPort.PortNumber}/live";
                             Debug.WriteLine($"Intentando reproducir RTSP: {rtspUrl}");
 
                             var rtspViewerWindow = new RtspViewerPage();

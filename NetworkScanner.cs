@@ -48,8 +48,8 @@ namespace BeaconScan
 
                 tasks.Add(Task.Run(async () =>
                 {
-                    bool isTcpOpen = await IsTcpPortOpenAsync(ip, port, 3000);
-                    bool isUdpOpen = await IsUdpPortOpenAsync(ip, port, 3000);
+                    bool isTcpOpen = await IsTcpPortOpenAsync(ip, port, 4000);
+                    bool isUdpOpen = await IsUdpPortOpenAsync(ip, port, 4000);
 
                     if (isTcpOpen || isUdpOpen)
                     {
@@ -188,7 +188,7 @@ namespace BeaconScan
                         try
                         {
                             // Timeout configurado a 300ms (puede ajustarse según las necesidades).
-                            var reply = await ping.SendPingAsync(ip, 300);
+                            var reply = await ping.SendPingAsync(ip, 800);
                             if (reply.Status == System.Net.NetworkInformation.IPStatus.Success)
                             {
                                 lock (activeIps)

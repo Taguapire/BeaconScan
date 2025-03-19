@@ -9,7 +9,96 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
     Title="Beacon Scan">
+
     <Grid Background="LightSkyBlue">
+        <Grid.Resources>
+            <!-- Define los recursos necesarios -->
+            <SolidColorBrush x:Key="ListViewItemBackgroundThemeBrush" Color="Transparent"/>
+            <SolidColorBrush x:Key="ListViewItemSelectedBackgroundThemeBrush" Color="DarkBlue"/>
+            <SolidColorBrush x:Key="ListViewItemForegroundThemeBrush" Color="Black"/>
+            <SolidColorBrush x:Key="ListViewItemSelectedForegroundThemeBrush" Color="White"/>
+            <SolidColorBrush x:Key="ListViewItemPointerOverBackgroundThemeBrush" Color="Blue"/>
+            <SolidColorBrush x:Key="ListViewItemPressedBackgroundThemeBrush" Color="Navy"/>
+
+            <!-- Estilo personalizado para ListViewItem -->
+            <Style x:Key="CustomListViewItemStyle" TargetType="ListViewItem">
+                <Setter Property="Padding" Value="0"/>
+                <Setter Property="Margin" Value="0"/>
+                <Setter Property="MinHeight" Value="0"/>
+                <Setter Property="VerticalContentAlignment" Value="Center"/>
+                <!-- Fijamos Foreground predeterminado -->
+                <Setter Property="Foreground" Value="Black" />
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="ListViewItem">
+                            <!-- ListViewItemPresenter es el elemento raíz -->
+                            <ListViewItemPresenter
+                        x:Name="ContentPresenter"
+                        ContentTransitions="{TemplateBinding ContentTransitions}"
+                        ContentTemplate="{TemplateBinding ContentTemplate}"
+                        Content="{TemplateBinding Content}"
+                        SelectedBackground="{ThemeResource ListViewItemSelectedBackgroundThemeBrush}"
+                        SelectedForeground="{ThemeResource ListViewItemSelectedForegroundThemeBrush}"
+                        Background="{ThemeResource ListViewItemBackgroundThemeBrush}"
+                        Foreground="{ThemeResource ListViewItemForegroundThemeBrush}"
+                        PointerOverBackground="{ThemeResource ListViewItemPointerOverBackgroundThemeBrush}"
+                        PressedBackground="{ThemeResource ListViewItemPressedBackgroundThemeBrush}">
+                                <!-- Definimos los estados visuales como parte del ListViewItemPresenter -->
+                                <VisualStateManager.VisualStateGroups>
+                                    <!-- Estados comunes -->
+                                    <VisualStateGroup x:Name="CommonStates">
+                                        <VisualState x:Name="Normal"/>
+                                        <VisualState x:Name="PointerOver">
+                                            <Storyboard>
+                                                <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ContentPresenter"
+                                                                       Storyboard.TargetProperty="Background">
+                                                    <DiscreteObjectKeyFrame KeyTime="0" Value="Blue"/>
+                                                </ObjectAnimationUsingKeyFrames>
+                                                <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ContentPresenter"
+                                                                       Storyboard.TargetProperty="Foreground">
+                                                    <DiscreteObjectKeyFrame KeyTime="0" Value="White"/>
+                                                </ObjectAnimationUsingKeyFrames>
+                                            </Storyboard>
+                                        </VisualState>
+                                        <VisualState x:Name="Pressed"/>
+                                    </VisualStateGroup>
+                                    <!-- Estados de selección -->
+                                    <VisualStateGroup x:Name="SelectionStates">
+                                        <VisualState x:Name="Unselected"/>
+                                        <VisualState x:Name="Selected">
+                                            <Storyboard>
+                                                <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ContentPresenter"
+                                                                       Storyboard.TargetProperty="Background">
+                                                    <DiscreteObjectKeyFrame KeyTime="0" 
+                                                Value="{ThemeResource ListViewItemSelectedBackgroundThemeBrush}"/>
+                                                </ObjectAnimationUsingKeyFrames>
+                                                <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ContentPresenter"
+                                                                       Storyboard.TargetProperty="Foreground">
+                                                    <DiscreteObjectKeyFrame KeyTime="0" 
+                                                Value="{ThemeResource ListViewItemSelectedForegroundThemeBrush}"/>
+                                                </ObjectAnimationUsingKeyFrames>
+                                            </Storyboard>
+                                        </VisualState>
+                                        <VisualState x:Name="SelectedPointerOver">
+                                            <Storyboard>
+                                                <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ContentPresenter"
+                                                                       Storyboard.TargetProperty="Background">
+                                                    <DiscreteObjectKeyFrame KeyTime="0" Value="RoyalBlue"/>
+                                                </ObjectAnimationUsingKeyFrames>
+                                                <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ContentPresenter"
+                                                                       Storyboard.TargetProperty="Foreground">
+                                                    <DiscreteObjectKeyFrame KeyTime="0" Value="White"/>
+                                                </ObjectAnimationUsingKeyFrames>
+                                            </Storyboard>
+                                        </VisualState>
+                                    </VisualStateGroup>
+                                </VisualStateManager.VisualStateGroups>
+                            </ListViewItemPresenter>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+        </Grid.Resources>
         <muxc:TabView x:Name="MyTabView" Margin="12" VerticalAlignment="Stretch" IsAddTabButtonVisible="false"  Background="LightBlue">
             <muxc:TabView.TabItems>
                 <muxc:TabViewItem Header="TCP and UDP Port Scanning" IsClosable="False" Background="LightSteelBlue">
@@ -78,24 +167,25 @@
                             </Border>
 
                             <!-- ListView for IPs (Column 0) -->
-                            <Border Grid.Row="2" Grid.Column="0" BorderBrush="LightBlue" BorderThickness="2">
-                                <ListView x:Name="ipListView" SelectionChanged="OnIpSelectionChanged" ScrollViewer.VerticalScrollBarVisibility="Auto">
+                            <Border Grid.Row="2" Grid.Column="0">
+                                <ListView x:Name="ipListView" BorderBrush="Indigo" BorderThickness="1" SelectionChanged="OnIpSelectionChanged" ScrollViewer.VerticalScrollBarVisibility="Auto" ItemContainerStyle="{StaticResource CustomListViewItemStyle}">
                                     <ListView.ItemTemplate>
                                         <DataTemplate>
-                                            <Grid Background="Transparent" Margin="5">
-                                                <TextBlock Text="{Binding}" VerticalAlignment="Center"/>
+                                            <Grid Background="Transparent" Margin="0" BorderBrush="Indigo" BorderThickness="1">
+                                                <TextBlock Text="{Binding}" VerticalAlignment="Center" Margin="0"/>
                                             </Grid>
                                         </DataTemplate>
                                     </ListView.ItemTemplate>
                                 </ListView>
                             </Border>
 
+
                             <!-- ListView for Ports (Column 1) -->
-                            <Border Grid.Row="2" Grid.Column="1" BorderBrush="LightCoral" BorderThickness="2">
-                                <ListView x:Name="portsListView" ScrollViewer.VerticalScrollBarVisibility="Auto" SelectionMode="Single" SelectionChanged="PortsListView_SelectionChanged">
+                            <Border Grid.Row="2" Grid.Column="1">
+                                <ListView x:Name="portsListView" BorderBrush="Indigo" BorderThickness="1" ScrollViewer.VerticalScrollBarVisibility="Auto" SelectionMode="Single" SelectionChanged="PortsListView_SelectionChanged">
                                     <ListView.ItemTemplate>
                                         <DataTemplate>
-                                            <Grid Background="Transparent" Margin="5">
+                                            <Grid Background="Transparent" Margin="0" BorderBrush="Indigo"  BorderThickness="1">
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="100"/>
                                                     <ColumnDefinition Width="100"/>
@@ -110,6 +200,7 @@
                                 </ListView>
                             </Border>
                         </Grid>
+
                     </TabViewItem.Content>
                 </muxc:TabViewItem>
                 <!-- Nueva Pestaña: SSH -->
