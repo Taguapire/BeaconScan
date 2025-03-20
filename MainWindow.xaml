@@ -10,16 +10,17 @@
     mc:Ignorable="d"
     Title="Beacon Scan">
 
-    <Grid Background="LightSkyBlue">
+    <Grid x:Name="RootGrid" Background="LightSkyBlue">
         <Grid.Resources>
             <!-- Define los recursos necesarios -->
-            <SolidColorBrush x:Key="ListViewItemBackgroundThemeBrush" Color="Transparent"/>
-            <SolidColorBrush x:Key="ListViewItemSelectedBackgroundThemeBrush" Color="DarkBlue"/>
-            <SolidColorBrush x:Key="ListViewItemForegroundThemeBrush" Color="Black"/>
+            <!-- Fondo para ListViewItems -->
+            <SolidColorBrush x:Key="ListViewItemBackgroundThemeBrush" Color="WhiteSmoke"/>
+            <SolidColorBrush x:Key="ListViewItemSelectedBackgroundThemeBrush" Color="CornflowerBlue"/>
+            <SolidColorBrush x:Key="ListViewItemForegroundThemeBrush" Color="DarkSlateGray"/>
             <SolidColorBrush x:Key="ListViewItemSelectedForegroundThemeBrush" Color="White"/>
-            <SolidColorBrush x:Key="ListViewItemPointerOverBackgroundThemeBrush" Color="Blue"/>
-            <SolidColorBrush x:Key="ListViewItemPressedBackgroundThemeBrush" Color="Navy"/>
-
+            <SolidColorBrush x:Key="ListViewItemPointerOverBackgroundThemeBrush" Color="SkyBlue"/>
+            <SolidColorBrush x:Key="ListViewItemPressedBackgroundThemeBrush" Color="DeepSkyBlue"/>
+            <local:AlternationBrushConverter x:Key="AlternationBrushConverter"/>
             <!-- Estilo personalizado para ListViewItem -->
             <Style x:Key="CustomListViewItemStyle" TargetType="ListViewItem">
                 <Setter Property="Padding" Value="0"/>
@@ -52,11 +53,11 @@
                                             <Storyboard>
                                                 <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ContentPresenter"
                                                                        Storyboard.TargetProperty="Background">
-                                                    <DiscreteObjectKeyFrame KeyTime="0" Value="Blue"/>
+                                                    <DiscreteObjectKeyFrame KeyTime="0" Value="Green"/>
                                                 </ObjectAnimationUsingKeyFrames>
                                                 <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ContentPresenter"
                                                                        Storyboard.TargetProperty="Foreground">
-                                                    <DiscreteObjectKeyFrame KeyTime="0" Value="White"/>
+                                                    <DiscreteObjectKeyFrame KeyTime="0" Value="Yellow"/>
                                                 </ObjectAnimationUsingKeyFrames>
                                             </Storyboard>
                                         </VisualState>
@@ -168,18 +169,25 @@
 
                             <!-- ListView for IPs (Column 0) -->
                             <Border Grid.Row="2" Grid.Column="0">
-                                <ListView x:Name="ipListView" BorderBrush="Indigo" BorderThickness="1" SelectionChanged="OnIpSelectionChanged" ScrollViewer.VerticalScrollBarVisibility="Auto" ItemContainerStyle="{StaticResource CustomListViewItemStyle}">
+                                <ListView x:Name="ipListView"
+          BorderBrush="Indigo"
+          BorderThickness="1"
+          SelectionChanged="OnIpSelectionChanged"
+          ScrollViewer.VerticalScrollBarVisibility="Auto"
+          ItemContainerStyle="{StaticResource CustomListViewItemStyle}">
                                     <ListView.ItemTemplate>
-                                        <DataTemplate>
-                                            <Grid Background="Transparent" Margin="0" BorderBrush="Indigo" BorderThickness="1">
-                                                <TextBlock Text="{Binding}" VerticalAlignment="Center" Margin="0"/>
+                                        <DataTemplate x:DataType="local:IpItem">
+                                            <Grid Background="{Binding IsEven, Converter={StaticResource AlternationBrushConverter}}"
+
+      BorderBrush="Indigo"
+        Margin="1" BorderThickness="1">
+                                                <TextBlock Text="{x:Bind IpAddress}" VerticalAlignment="Center"/>
                                             </Grid>
+
                                         </DataTemplate>
                                     </ListView.ItemTemplate>
                                 </ListView>
                             </Border>
-
-
                             <!-- ListView for Ports (Column 1) -->
                             <Border Grid.Row="2" Grid.Column="1">
                                 <ListView x:Name="portsListView" BorderBrush="Indigo" BorderThickness="1" ScrollViewer.VerticalScrollBarVisibility="Auto" SelectionMode="Single" SelectionChanged="PortsListView_SelectionChanged">
@@ -287,16 +295,27 @@
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
 
-                                <ListView x:Name="localDirListBox" Grid.Column="0" Margin="5" Background="LightBlue" BorderBrush="DarkRed" BorderThickness="1" DoubleTapped="LocalDirListBox_DoubleTapped">
+                                <ListView x:Name="localDirListBox" 
+	Grid.Column="0" 
+	Margin="5" 
+	BorderBrush="Indigo" 
+	BorderThickness="1" 
+	DoubleTapped="LocalDirListBox_DoubleTapped"
+	ItemContainerStyle="{StaticResource CustomListViewItemStyle}">
                                     <ListView.ItemTemplate>
-                                        <DataTemplate>
-                                            <StackPanel Orientation="Horizontal">
-                                                <TextBlock Text="{Binding Name}" Width="200" Foreground="Black"/>
-                                                <TextBlock Text="{Binding Type}" Width="50" Foreground="Black"/>
-                                            </StackPanel>
+                                        <DataTemplate x:DataType="local:FileItem">
+                                            <Grid Background="{Binding IsEven, Converter={StaticResource AlternationBrushConverter}}"
+		BorderBrush="Indigo"
+                Margin="1" BorderThickness="1">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock Text="{x:Bind Name}" Width="200"/>
+                                                    <TextBlock Text="{x:Bind Type}" Width="50"/>
+                                                </StackPanel>
+                                            </Grid>
                                         </DataTemplate>
                                     </ListView.ItemTemplate>
                                 </ListView>
+
 
                                 <!-- Botones de Transferencia -->
                                 <StackPanel Grid.Column="1" Orientation="Vertical" VerticalAlignment="Center" Margin="5">
@@ -305,13 +324,23 @@
                                 </StackPanel>
 
                                 <!-- Directorio Remoto -->
-                                <ListView x:Name="remoteDirListBox" Grid.Column="2" Margin="5" Background="LightBlue" BorderBrush="DarkRed" BorderThickness="1" DoubleTapped="RemoteDirListBox_DoubleTapped">
+                                <ListView x:Name="remoteDirListBox" 
+Grid.Column="2" 
+Margin="5" 
+BorderBrush="Indigo" 
+BorderThickness="1" 
+DoubleTapped="RemoteDirListBox_DoubleTapped"
+ItemContainerStyle="{StaticResource CustomListViewItemStyle}">
                                     <ListView.ItemTemplate>
-                                        <DataTemplate>
-                                            <StackPanel Orientation="Horizontal" >
-                                                <TextBlock Text="{Binding Name}" Width="200" Foreground="Black" />
-                                                <TextBlock Text="{Binding Type}" Width="50" Foreground="Black"/>
-                                            </StackPanel>
+                                        <DataTemplate x:DataType="local:FileItem">
+                                            <Grid Background="{Binding IsEven, Converter={StaticResource AlternationBrushConverter}}"
+	BorderBrush="Indigo"
+            Margin="1" BorderThickness="1">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock Text="{x:Bind Name}" Width="200"/>
+                                                    <TextBlock Text="{x:Bind Type}" Width="50"/>
+                                                </StackPanel>
+                                            </Grid>
                                         </DataTemplate>
                                     </ListView.ItemTemplate>
                                 </ListView>

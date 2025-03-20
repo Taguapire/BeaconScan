@@ -56,24 +56,25 @@ namespace BeaconScan
 #pragma warning disable CS8602 // Dereference of a possibly null reference.
             scanButton.IsEnabled = false;
 #pragma warning restore CS8602 // Dereference of a possibly null reference.
-
             _cancellationTokenSource = new CancellationTokenSource();
 
-            statusText.Text = "Please wait, this will take a few minutes"; // Actualizado al inglés
+            statusText.Text = "Please wait, this will take a few minutes";
             progressRing.IsActive = true;
             progressRing.Visibility = Visibility.Visible;
-            ipListView.Items.Clear();
+
+            // Limpiamos la fuente de datos actual
+            ipListView.ItemsSource = null;
 
             try
             {
-                // Pasamos la Base IP dinámica como parámetro a ScanNetworkAsync.
+                // Obtenemos la base IP desde el TextBlock
                 baseIp = baseIPTextBlock.Text;
+
+                // Aquí se obtiene la lista de IpItem, con la propiedad IsEven asignada internamente.
                 var activeIps = await NetworkScanner.ScanNetworkAsync(baseIp, _cancellationTokenSource.Token);
 
-                foreach (var ip in activeIps)
-                {
-                    ipListView.Items.Add(ip);
-                }
+                // Asignamos la colección como ItemsSource del ListView
+                ipListView.ItemsSource = activeIps;
 
                 statusText.Text = "Scan completed.";
             }
@@ -88,13 +89,12 @@ namespace BeaconScan
             finally
             {
                 progressRing.IsActive = false;
-                progressRing.Visibility = Visibility.Collapsed; // Lo ocultamos al finalizar
+                progressRing.Visibility = Visibility.Collapsed;
                 _cancellationTokenSource = null;
-
-                // Rehabilitamos el botón después de que el proceso termine
                 scanButton.IsEnabled = true;
             }
         }
+
 
         private async Task<(bool Success, string Username, string Password)> ShowCredentialsDialogAsync(string ip, int port)
         {
@@ -222,8 +222,10 @@ namespace BeaconScan
 
         private async void OnIpSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (ipListView.SelectedItem is string selectedIp)
+            if (ipListView.SelectedItem is IpItem selectedItem) // Ahora se verifica si es IpItem
             {
+                // Se extrae la dirección IP del objeto seleccionado.
+                string selectedIp = selectedItem.IpAddress;
                 _selectedIp = selectedIp; // Actualizamos la IP seleccionada
                 Debug.WriteLine($"IP seleccionada (actualizada): {_selectedIp}");
 
@@ -245,14 +247,12 @@ namespace BeaconScan
                         var portInfo = portRegistry.FindByPortNumber(port.PortNumber);
 
                         // Convertimos PortInfo a PortDetails
-#pragma warning disable CS8601 // Possible null reference assignment.
                         var portDetails = new PortDetails
                         {
                             Protocol = portInfo.Protocol,
                             PortNumber = portInfo.PortNumber,
                             ServiceName = portInfo.ServiceName
                         };
-#pragma warning restore CS8601 // Possible null reference assignment.
 
                         // Agregamos el PortDetails al ListView
                         portsListView.Items.Add(portDetails);
@@ -414,15 +414,20 @@ namespace BeaconScan
                 // Obtener la lista remota con FileItem
                 var remoteFiles = await _sftpManager.GetRemoteFileListAsync(remotePath);
 
+                // Asignar zebra striping: recorrer la lista y asignar IsEven para cada valor
+                for (int i = 0; i < remoteFiles.Count; i++)
+                {
+                    remoteFiles[i].IsEven = (i % 2 == 0);
+                }
+
                 // Asignar los datos al ListBox
-                remoteDirListBox.ItemsSource = remoteFiles; // remoteFiles es List<FileItem>
+                remoteDirListBox.ItemsSource = remoteFiles;
             }
             catch (Exception ex)
             {
                 UpdateStatus($"Error al obtener archivos remotos: {ex.Message}");
             }
         }
-
 
         private async Task LoadLocalFiles(string localPath)
         {
@@ -448,6 +453,12 @@ namespace BeaconScan
                     return fileItems;
                 });
 
+                // Configurar zebra striping: cada elemento obtiene IsEven en función del índice
+                for (int i = 0; i < localFiles.Count; i++)
+                {
+                    localFiles[i].IsEven = (i % 2 == 0);
+                }
+
                 // Asignar al ListBox
                 localDirListBox.ItemsSource = localFiles;
             }
@@ -456,6 +467,7 @@ namespace BeaconScan
                 UpdateStatus($"Error al obtener archivos locales: {ex.Message}");
             }
         }
+
 
         // Evento para subir archivo (de local a remoto)
         private async void OnUploadFile(object sender, RoutedEventArgs e)
@@ -542,7 +554,7 @@ namespace BeaconScan
                         }
 
                         // Navegar al directorio padre
-                        remoteDirectory = parentDirectory;
+                        remoteDirectory = Path.Combine(parentDirectory, "").Replace('\\', '/');
                     }
                     else if (selectedItem.Type == "D")
                     {

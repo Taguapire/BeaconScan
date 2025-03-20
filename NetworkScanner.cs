@@ -152,7 +152,7 @@ namespace BeaconScan
         }
 
         // Escaneo de red para IPs activas
-        public static async Task<List<string>> ScanNetworkAsync(string baseIp, CancellationToken cancellationToken)
+        public static async Task<List<IpItem>> ScanNetworkAsync(string baseIp, CancellationToken cancellationToken)
         {
             var activeIps = new List<string>();
 
@@ -160,7 +160,7 @@ namespace BeaconScan
             if (string.IsNullOrWhiteSpace(baseIp) || !baseIp.Contains("."))
             {
                 Console.WriteLine("Invalid base IP provided for network scan.");
-                return activeIps; // Retornar una lista vacía si la base IP no es válida.
+                return new List<IpItem>(); // Retornar una lista vacía si la base IP no es válida.
             }
 
             // Nos aseguramos de que baseIp termine con un punto (e.g., "192.168.8.")
@@ -187,7 +187,7 @@ namespace BeaconScan
                         bool ipAdded = false;
                         try
                         {
-                            // Timeout configurado a 300ms (puede ajustarse según las necesidades).
+                            // Timeout configurado a 800ms (ajústalo según tus necesidades).
                             var reply = await ping.SendPingAsync(ip, 800);
                             if (reply.Status == System.Net.NetworkInformation.IPStatus.Success)
                             {
@@ -219,7 +219,27 @@ namespace BeaconScan
             }
 
             await Task.WhenAll(tasks);
-            return activeIps;
+
+            // Ordenar las IPs resultantes (por el último octeto) para garantizar un orden lógico.
+            activeIps.Sort((a, b) =>
+            {
+                int lastOctetA = int.Parse(a.Substring(a.LastIndexOf('.') + 1));
+                int lastOctetB = int.Parse(b.Substring(b.LastIndexOf('.') + 1));
+                return lastOctetA.CompareTo(lastOctetB);
+            });
+
+            // Convertir la lista de direcciones IP en una lista de IpItem con la propiedad IsEven asignada.
+            var ipItems = new List<IpItem>();
+            for (int i = 0; i < activeIps.Count; i++)
+            {
+                ipItems.Add(new IpItem
+                {
+                    IpAddress = activeIps[i],
+                    IsEven = (i % 2 == 0) // true para índices pares, false para impares.
+                });
+            }
+
+            return ipItems;
         }
     }
 }
