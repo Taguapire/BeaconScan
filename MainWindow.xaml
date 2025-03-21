@@ -142,15 +142,30 @@
                             </StackPanel>
 
                             <!-- Top row, Column 1: Cancel and Exit buttons -->
-                            <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center" Margin="10">
-                                <Button x:Name="openWebViewButton" Content="Open WebView" Click="OnOpenWebViewButtonClicked" Margin="5"/>
-                                <Button Content="Cancel" Click="OnCancelarButtonClicked" Margin="5"/>
-                                <Button Content="Exit" Click="OnExitButtonClicked" Margin="5"/>
+                            <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center" Spacing="10">
+                                <!-- CheckBox con ToolTip para SYN Scan -->
+                                <CheckBox x:Name="UseSynScanCheckBox" Content="Usar SYN Scan" VerticalAlignment="Center">
+                                    <ToolTipService.ToolTip>
+                                        <ToolTip Content="El SYN Scan permite detectar puertos abiertos enviando paquetes TCP personalizados. Úsalo solo si tienes autorización y permisos administrativos." />
+                                    </ToolTipService.ToolTip>
+                                </CheckBox>
+
+                                <!-- Botones existentes -->
+                                <Button x:Name="openWebViewButton" Content="Open WebView" Click="OnOpenWebViewButtonClicked" />
+                                <Button Content="Cancel" Click="OnCancelarButtonClicked" />
+                                <Button Content="Exit" Click="OnExitButtonClicked" />
                             </StackPanel>
 
                             <!-- Header for the IP List (Column 0) -->
                             <Border Grid.Row="1" Grid.Column="0" Background="LightBlue" Padding="5">
-                                <TextBlock Text="IP Addresses" FontWeight="Bold" HorizontalAlignment="Center"/>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="100"/>
+                                        <ColumnDefinition Width="100"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="Hostnames" Grid.Column="0" FontWeight="Bold" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="IP Addresses" Grid.Column="1" FontWeight="Bold" HorizontalAlignment="Center"/>
+                                </Grid>
                             </Border>
 
                             <!-- Header for the Ports List (Column 1) -->
@@ -181,7 +196,12 @@
 
       BorderBrush="Indigo"
         Margin="1" BorderThickness="1">
-                                                <TextBlock Text="{x:Bind IpAddress}" VerticalAlignment="Center"/>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="100"/>
+                                                    <ColumnDefinition Width="100"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Text="{x:Bind Hostname}" Grid.Column="0" VerticalAlignment="Center"/>
+                                                <TextBlock Text="{x:Bind IpAddress}" Grid.Column="1" VerticalAlignment="Center"/>
                                             </Grid>
 
                                         </DataTemplate>

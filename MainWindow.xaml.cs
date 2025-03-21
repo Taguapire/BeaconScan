@@ -32,13 +32,15 @@ namespace BeaconScan
         private string remoteDirectory = "~/"; // Valor por defecto que luego se reemplazará según la elección del usuario
 
         private CancellationTokenSource? _cancellationTokenSource; // Declarado como nullable.
+        
+        bool useSynScan = true; // O según el estado del checkbox
 
         public MainWindow()
         {
             this.InitializeComponent();
             baseIp = NetworkScanner.GetLocalBaseIP();
             baseIPTextBlock.Text = baseIp;
-
+            bool useSynScan = UseSynScanCheckBox.IsChecked == true;
             // Si la Base IP es "unknown", deshabilitamos el botón Scan (o todos los que consideres).
             if (baseIp == "unknown")
             {
@@ -71,7 +73,10 @@ namespace BeaconScan
                 baseIp = baseIPTextBlock.Text;
 
                 // Aquí se obtiene la lista de IpItem, con la propiedad IsEven asignada internamente.
-                var activeIps = await NetworkScanner.ScanNetworkAsync(baseIp, _cancellationTokenSource.Token);
+
+                CancellationToken cancellationToken = new();
+
+                var activeIps = await NetworkScanner.ScanNetworkAsync(baseIp, useSynScan, cancellationToken);
 
                 // Asignamos la colección como ItemsSource del ListView
                 ipListView.ItemsSource = activeIps;
@@ -135,22 +140,22 @@ namespace BeaconScan
                         break;
 
                     case 554: // RTSP (Streaming)
-                        var credentials = await ShowCredentialsDialogAsync(_selectedIp, selectedPort.PortNumber);
+                              //var credentials = await ShowCredentialsDialogAsync(_selectedIp, selectedPort.PortNumber);
 
-                        if (credentials.Success) // Si el usuario ingresó credenciales
-                        {
-                            string rtspUrl = $"rtsp://{credentials.Username}:{credentials.Password}@{_selectedIp}:{selectedPort.PortNumber}/live";
-                            Debug.WriteLine($"Intentando reproducir RTSP: {rtspUrl}");
-
-                            var rtspViewerWindow = new RtspViewerPage();
-                            rtspViewerWindow.PlayStream(rtspUrl);
-                            rtspViewerWindow.Activate();
-                        }
-                        else
-                        {
-                            Debug.WriteLine("El usuario canceló el ingreso de credenciales.");
-                            statusText.Text = "Conexión RTSP cancelada por el usuario.";
-                        }
+                        //if (credentials.Success) // Si el usuario ingresó credenciales
+                        //{
+                        //    string rtspUrl = $"rtsp://{credentials.Username}:{credentials.Password}@{_selectedIp}:{selectedPort.PortNumber}/live";
+                        //    Debug.WriteLine($"Intentando reproducir RTSP: {rtspUrl}");
+                        //
+                        // var rtspViewerWindow = new RtspViewerPage();
+                        // rtspViewerWindow.PlayStream(rtspUrl);
+                        // rtspViewerWindow.Activate();
+                        //}
+                        //else
+                        //{ 
+                        //Debug.WriteLine("El usuario canceló el ingreso de credenciales.");
+                        //statusText.Text = "Conexión RTSP cancelada por el usuario.";
+                        //}
                         break;
 
                     case 3389: // RDP
@@ -239,7 +244,9 @@ namespace BeaconScan
                 {
                     var portRegistry = new PortRegistry();
                     var registeredPorts = portRegistry.GetRegisteredPortNumbers();
-                    var openPorts = await NetworkScanner.ScanPortsAsync(selectedIp, registeredPorts, _cancellationTokenSource.Token);
+
+                    var cancellationToken = new CancellationTokenSource().Token;
+                    var openPorts = await NetworkScanner.ScanPortsAsync(selectedIp, registeredPorts, cancellationToken);
 
                     foreach (var port in openPorts)
                     {

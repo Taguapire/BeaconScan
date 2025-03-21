@@ -67,6 +67,15 @@ namespace BeaconScan
 
                 // Puertos adicionales para sistemas y redes
                 new PortInfo { Protocol = "UDP", PortNumber = 69, ServiceName = "TFTP" },
+
+                // Puertos relacionados con impresoras
+                new PortInfo { Protocol = "TCP", PortNumber = 515, ServiceName = "LPD (Line Printer Daemon)" },
+                new PortInfo { Protocol = "TCP", PortNumber = 631, ServiceName = "IPP (Internet Printing Protocol)" },
+                new PortInfo { Protocol = "UDP", PortNumber = 161, ServiceName = "SNMP" },
+                new PortInfo { Protocol = "UDP", PortNumber = 162, ServiceName = "SNMP Trap" },
+                new PortInfo { Protocol = "UDP", PortNumber = 1900, ServiceName = "SSDP" },
+                new PortInfo { Protocol = "TCP", PortNumber = 9100, ServiceName = "RAW (Protocolo de impresión)" },
+                new PortInfo { Protocol = "UDP", PortNumber = 3702, ServiceName = "WS-Discovery" },
             };
         }
 

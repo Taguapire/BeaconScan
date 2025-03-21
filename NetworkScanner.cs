@@ -1,5 +1,7 @@
-﻿using System;
+﻿using Open.Nat;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
@@ -152,15 +154,15 @@ namespace BeaconScan
         }
 
         // Escaneo de red para IPs activas
-        public static async Task<List<IpItem>> ScanNetworkAsync(string baseIp, CancellationToken cancellationToken)
+        public static async Task<List<IpItem>> ScanNetworkAsync(string baseIp, bool useSynScan, CancellationToken cancellationToken)
         {
-            var activeIps = new List<string>();
+            var activeIps = new List<IpItem>();
 
-            // Validar si la base IP es válida antes de proceder.
+            // Validar si la base IP es válida antes de proceder
             if (string.IsNullOrWhiteSpace(baseIp) || !baseIp.Contains("."))
             {
                 Console.WriteLine("Invalid base IP provided for network scan.");
-                return new List<IpItem>(); // Retornar una lista vacía si la base IP no es válida.
+                return activeIps;
             }
 
             // Nos aseguramos de que baseIp termine con un punto (e.g., "192.168.8.")
@@ -169,77 +171,170 @@ namespace BeaconScan
                 baseIp = baseIp.Substring(0, baseIp.LastIndexOf('.') + 1);
             }
 
-            var tasks = new List<Task>();
+            // Paso 1: Escaneo tradicional usando Ping
+            Console.WriteLine("Realizando escaneo tradicional con Ping...");
+            var pingResults = await PerformPingScanAsync(baseIp, cancellationToken);
+            activeIps.AddRange(pingResults);
 
-            // Se instancia el PortRegistry para obtener los puertos registrados.
-            var portRegistry = new PortRegistry();
-            var registeredPorts = portRegistry.GetRegisteredPortNumbers();
+            // Paso 2: Ejecutar SYN Scan opcional
+            if (useSynScan)
+            {
+                Console.WriteLine("Ejecutando SYN Scan...");
+                var synScanResults = await PerformSynScanAsync(baseIp, 80, cancellationToken); // Puerto 80 como ejemplo
+                activeIps.AddRange(synScanResults);
+            }
+
+            // Paso 3: Integración con UPnP
+            Console.WriteLine("Buscando dispositivos UPnP...");
+            var upnpResults = await PerformUPnPDiscoveryAsync(activeIps);
+            activeIps.AddRange(upnpResults);
+
+            // Eliminar duplicados (por si alguna IP aparece en varios métodos)
+            activeIps = activeIps.GroupBy(ip => ip.IpAddress)
+                                 .Select(group => group.First())
+                                 .OrderBy(ip => int.Parse(ip.IpAddress.Split('.').Last()))
+                                 .ToList();
+
+            // Resolver hostnames para cada IP detectada
+            foreach (var ipItem in activeIps)
+            {
+                try
+                {
+                    var hostEntry = System.Net.Dns.GetHostEntry(ipItem.IpAddress);
+                    ipItem.Hostname = hostEntry.HostName;
+                }
+                catch (Exception)
+                {
+                    ipItem.Hostname = ipItem.Hostname ?? "Unknown"; // Si no se puede resolver, establecer "Unknown"
+                }
+            }
+
+            // Asignar la propiedad IsEven para alternar colores en la UI
+            for (int i = 0; i < activeIps.Count; i++)
+            {
+                activeIps[i].IsEven = (i % 2 == 0);
+            }
+
+            return activeIps;
+        }
+
+        private static async Task<List<IpItem>> PerformPingScanAsync(string baseIp, CancellationToken cancellationToken)
+        {
+            var activeIps = new List<IpItem>();
+            var semaphore = new SemaphoreSlim(50); // Limitar a 50 tareas concurrentes
+            var tasks = new List<Task>();
 
             for (int i = 1; i <= 254; i++)
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                string ip = baseIp + i; // Construimos cada dirección IP en el rango basado en la base IP proporcionada.
+                string ip = baseIp + i;
 
                 tasks.Add(Task.Run(async () =>
                 {
-                    using (var ping = new System.Net.NetworkInformation.Ping())
+                    await semaphore.WaitAsync(cancellationToken);
+                    try
                     {
-                        bool ipAdded = false;
-                        try
+                        using (var ping = new System.Net.NetworkInformation.Ping())
                         {
-                            // Timeout configurado a 800ms (ajústalo según tus necesidades).
-                            var reply = await ping.SendPingAsync(ip, 800);
+                            var reply = await ping.SendPingAsync(ip, 1500); // Timeout configurado a 1500 ms
                             if (reply.Status == System.Net.NetworkInformation.IPStatus.Success)
                             {
                                 lock (activeIps)
                                 {
-                                    activeIps.Add(ip);
-                                }
-                                ipAdded = true;
-                            }
-                        }
-                        catch (Exception ex) when (!(ex is OperationCanceledException))
-                        {
-                            Console.WriteLine($"[Ping] Error for {ip}: {ex.Message}");
-                        }
-                        // Si no se detecta por ping, intentamos el escaneo de puertos.
-                        if (!ipAdded)
-                        {
-                            var openPorts = await ScanPortsAsync(ip, registeredPorts, cancellationToken);
-                            if (openPorts.Count > 0)
-                            {
-                                lock (activeIps)
-                                {
-                                    activeIps.Add(ip);
+                                    activeIps.Add(new IpItem { IpAddress = ip });
                                 }
                             }
                         }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Ping error for {ip}: {ex.Message}");
+                    }
+                    finally
+                    {
+                        semaphore.Release();
                     }
                 }, cancellationToken));
             }
 
             await Task.WhenAll(tasks);
+            return activeIps;
+        }
 
-            // Ordenar las IPs resultantes (por el último octeto) para garantizar un orden lógico.
-            activeIps.Sort((a, b) =>
-            {
-                int lastOctetA = int.Parse(a.Substring(a.LastIndexOf('.') + 1));
-                int lastOctetB = int.Parse(b.Substring(b.LastIndexOf('.') + 1));
-                return lastOctetA.CompareTo(lastOctetB);
-            });
+        public static async Task<List<IpItem>> PerformSynScanAsync(string baseIp, int port, CancellationToken cancellationToken)
+        {
+            var activeIps = new List<IpItem>();
+            var semaphore = new SemaphoreSlim(50); // Limitar a 50 tareas concurrentes
+            var tasks = new List<Task>();
 
-            // Convertir la lista de direcciones IP en una lista de IpItem con la propiedad IsEven asignada.
-            var ipItems = new List<IpItem>();
-            for (int i = 0; i < activeIps.Count; i++)
+            for (int i = 1; i <= 254; i++)
             {
-                ipItems.Add(new IpItem
+                cancellationToken.ThrowIfCancellationRequested();
+                string ip = baseIp + i;
+
+                tasks.Add(Task.Run(async () =>
                 {
-                    IpAddress = activeIps[i],
-                    IsEven = (i % 2 == 0) // true para índices pares, false para impares.
-                });
+                    await semaphore.WaitAsync(cancellationToken);
+                    try
+                    {
+                        using (var client = new TcpClient())
+                        {
+                            var connectTask = client.ConnectAsync(ip, port);
+                            if (await Task.WhenAny(connectTask, Task.Delay(1500)) == connectTask) // Timeout de 1500 ms
+                            {
+                                if (client.Connected)
+                                {
+                                    lock (activeIps)
+                                    {
+                                        activeIps.Add(new IpItem { IpAddress = ip, Hostname = "SYN Scan Detected" });
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"SYN Scan error for {ip}:{port}: {ex.Message}");
+                    }
+                    finally
+                    {
+                        semaphore.Release();
+                    }
+                }, cancellationToken));
             }
 
-            return ipItems;
+            await Task.WhenAll(tasks);
+            return activeIps;
+        }
+
+        private static async Task<List<IpItem>> PerformUPnPDiscoveryAsync(List<IpItem> currentIps)
+        {
+            var discoveredIps = new List<IpItem>();
+            try
+            {
+                var nat = new NatDiscoverer();
+                var cts = new CancellationTokenSource(5000); // Timeout de 5 segundos
+                var device = await nat.DiscoverDeviceAsync(PortMapper.Upnp, cts);
+
+                Console.WriteLine($"UPnP: Dispositivo encontrado en {device}");
+
+                // Agregar el dispositivo UPnP a la lista si no está ya incluido
+                var ipAddress = device.GetExternalIPAsync().Result.ToString(); // Obtiene la IP externa del dispositivo
+                if (currentIps.All(ipItem => ipItem.IpAddress != ipAddress))
+                {
+                    discoveredIps.Add(new IpItem
+                    {
+                        IpAddress = ipAddress,
+                        Hostname = "UPnP Device" // Los dispositivos UPnP no siempre tienen un hostname definido
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error en descubrimiento UPnP: {ex.Message}");
+            }
+
+            return discoveredIps;
         }
     }
 }
