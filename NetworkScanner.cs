@@ -1,11 +1,11 @@
-﻿using Open.Nat;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
+using SharpOpenNat;
 
 namespace BeaconScan
 {
@@ -310,22 +310,28 @@ namespace BeaconScan
         private static async Task<List<IpItem>> PerformUPnPDiscoveryAsync(List<IpItem> currentIps)
         {
             var discoveredIps = new List<IpItem>();
+
             try
             {
-                var nat = new NatDiscoverer();
-                var cts = new CancellationTokenSource(5000); // Timeout de 5 segundos
-                var device = await nat.DiscoverDeviceAsync(PortMapper.Upnp, cts);
+                // Configuramos un timeout de 5 segundos
+                using var cts = new CancellationTokenSource(5000);
+
+                // Descubrimos un dispositivo UPnP en la red
+                var device = await OpenNat.Discoverer.DiscoverDeviceAsync(PortMapper.Upnp, cts.Token);
 
                 Console.WriteLine($"UPnP: Dispositivo encontrado en {device}");
 
-                // Agregar el dispositivo UPnP a la lista si no está ya incluido
-                var ipAddress = device.GetExternalIPAsync().Result.ToString(); // Obtiene la IP externa del dispositivo
-                if (currentIps.All(ipItem => ipItem.IpAddress != ipAddress))
+                // Obtenemos la IP externa, la convertimos a string
+                var ipAddress = await device.GetExternalIPAsync();
+                var ipAddressStr = ipAddress.ToString();
+
+                // Verificamos si la IP ya está en la lista (comparando cadenas)
+                if (currentIps.All(ipItem => ipItem.IpAddress != ipAddressStr))
                 {
                     discoveredIps.Add(new IpItem
                     {
-                        IpAddress = ipAddress,
-                        Hostname = "UPnP Device" // Los dispositivos UPnP no siempre tienen un hostname definido
+                        IpAddress = ipAddressStr,
+                        Hostname = "UPnP Device" // Los dispositivos UPnP a veces no devuelven un hostname
                     });
                 }
             }

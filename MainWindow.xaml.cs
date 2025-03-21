@@ -120,6 +120,17 @@ namespace BeaconScan
             return (false, string.Empty, string.Empty);
         }
 
+        private void UseSynScanCheckBox_Checked(object sender, RoutedEventArgs e)
+        {
+            useSynScan = true;
+            Console.WriteLine("SYN Scan activado.");
+        }
+
+        private void UseSynScanCheckBox_Unchecked(object sender, RoutedEventArgs e)
+        {
+            useSynScan = false;
+            Console.WriteLine("SYN Scan desactivado.");
+        }
 
         private async void OnOpenWebViewButtonClicked(object sender, RoutedEventArgs e)
         {

@@ -144,7 +144,7 @@
                             <!-- Top row, Column 1: Cancel and Exit buttons -->
                             <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center" Spacing="10">
                                 <!-- CheckBox con ToolTip para SYN Scan -->
-                                <CheckBox x:Name="UseSynScanCheckBox" Content="Usar SYN Scan" VerticalAlignment="Center">
+                                <CheckBox x:Name="UseSynScanCheckBox" Content="Usar SYN Scan" VerticalAlignment="Center" Checked="UseSynScanCheckBox_Checked" Unchecked="UseSynScanCheckBox_Unchecked">
                                     <ToolTipService.ToolTip>
                                         <ToolTip Content="El SYN Scan permite detectar puertos abiertos enviando paquetes TCP personalizados. Úsalo solo si tienes autorización y permisos administrativos." />
                                     </ToolTipService.ToolTip>
