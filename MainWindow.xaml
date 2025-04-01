@@ -14,12 +14,12 @@
         <Grid.Resources>
             <!-- Define los recursos necesarios -->
             <!-- Fondo para ListViewItems -->
-            <SolidColorBrush x:Key="ListViewItemBackgroundThemeBrush" Color="WhiteSmoke"/>
-            <SolidColorBrush x:Key="ListViewItemSelectedBackgroundThemeBrush" Color="CornflowerBlue"/>
-            <SolidColorBrush x:Key="ListViewItemForegroundThemeBrush" Color="DarkSlateGray"/>
-            <SolidColorBrush x:Key="ListViewItemSelectedForegroundThemeBrush" Color="White"/>
-            <SolidColorBrush x:Key="ListViewItemPointerOverBackgroundThemeBrush" Color="SkyBlue"/>
-            <SolidColorBrush x:Key="ListViewItemPressedBackgroundThemeBrush" Color="DeepSkyBlue"/>
+            <SolidColorBrush x:Key="ListViewItemBackgroundThemeBrush" Color="White"/>
+            <SolidColorBrush x:Key="ListViewItemSelectedBackgroundThemeBrush" Color="DarkOliveGreen"/>
+            <SolidColorBrush x:Key="ListViewItemForegroundThemeBrush" Color="White"/>
+            <SolidColorBrush x:Key="ListViewItemSelectedForegroundThemeBrush" Color="OrangeRed"/>
+            <SolidColorBrush x:Key="ListViewItemPointerOverBackgroundThemeBrush" Color="DarkOliveGreen"/>
+            <SolidColorBrush x:Key="ListViewItemPressedBackgroundThemeBrush" Color="LightSkyBlue"/>
             <local:AlternationBrushConverter x:Key="AlternationBrushConverter"/>
             <!-- Estilo personalizado para ListViewItem -->
             <Style x:Key="CustomListViewItemStyle" TargetType="ListViewItem">
@@ -371,7 +371,7 @@ ItemContainerStyle="{StaticResource CustomListViewItemStyle}">
             </muxc:TabView.TabItems>
         </muxc:TabView>
         <!-- Barra de estado -->
-        <Border Background="LightGray" BorderBrush="DarkGray" BorderThickness="1" HorizontalAlignment="Stretch" VerticalAlignment="Bottom">
+        <Border Name ="BeaconStatusBar" Background="LightGray" BorderBrush="Indigo" Height="35" BorderThickness="1" HorizontalAlignment="Stretch" VerticalAlignment="Bottom">
             <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
@@ -385,8 +385,8 @@ ItemContainerStyle="{StaticResource CustomListViewItemStyle}">
                       Grid.Column="0"
                       IsActive="False" 
                       Visibility="Collapsed" 
-                      Width="15" 
-                      Height="15" 
+                      Width="32" 
+                      Height="32" 
                       HorizontalAlignment="Center" 
                       VerticalAlignment="Center"/>
 

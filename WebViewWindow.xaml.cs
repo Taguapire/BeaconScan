@@ -28,8 +28,11 @@ namespace BeaconScan
         {
             this.InitializeComponent();
 
-            // Configurar el WebView2 y cargar la URL
-            webView.Source = new Uri(url);
+            if (url != null && url != "")
+            {
+                // Configurar el WebView2 y cargar la URL
+                webView.Source = new Uri(url);
+            }
         }
     }
 }

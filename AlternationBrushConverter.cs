@@ -12,7 +12,7 @@ namespace BeaconScan
         {
             bool isEven = (bool)value;
             // Devuelve LightGray para filas pares y White para filas impares (ajusta los colores según lo necesites)
-            return isEven ? new SolidColorBrush(Colors.LightGray) : new SolidColorBrush(Colors.White);
+            return isEven ? new SolidColorBrush(Colors.DeepSkyBlue) : new SolidColorBrush(Colors.DarkBlue);
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, string language)

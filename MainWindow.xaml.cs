@@ -7,11 +7,11 @@ using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using System.Threading.Tasks;
 using System.Threading;
-using System.Diagnostics; // Asegúrate de tener la referencia a Windows.UI.Core para el Dispatcher
+using System.Diagnostics;
+using Microsoft.UI; // Asegúrate de tener la referencia a Windows.UI.Core para el Dispatcher
 
 namespace BeaconScan
 {
-
     public sealed partial class MainWindow : Window
     {
 
@@ -134,6 +134,9 @@ namespace BeaconScan
 
         private async void OnOpenWebViewButtonClicked(object sender, RoutedEventArgs e)
         {
+            string httpUrl = "";
+            var httpWebViewWindow = new WebViewWindow(httpUrl);
+
             if (!string.IsNullOrEmpty(_selectedIp) && portsListView.SelectedItem is PortDetails selectedPort)
             {
                 Debug.WriteLine($"IP seleccionada: {_selectedIp}");
@@ -144,14 +147,20 @@ namespace BeaconScan
                 {
                     case 80: // HTTP
                     case 8080: // HTTP Proxy
-                        string httpUrl = $"http://{_selectedIp}:{selectedPort.PortNumber}/";
+                        httpUrl = $"http://{_selectedIp}:{selectedPort.PortNumber}/";
                         Debug.WriteLine($"Abriendo HTTP en: {httpUrl}");
-                        var httpWebViewWindow = new WebViewWindow(httpUrl);
+                        httpWebViewWindow = new WebViewWindow(httpUrl);
+                        httpWebViewWindow.Activate();
+                        break;
+                    case 443: // HTTPS Proxy
+                        httpUrl = $"https://{_selectedIp}:{selectedPort.PortNumber}/";
+                        Debug.WriteLine($"Abriendo HTTP en: {httpUrl}");
+                        httpWebViewWindow = new WebViewWindow(httpUrl);
                         httpWebViewWindow.Activate();
                         break;
 
-                    case 554: // RTSP (Streaming)
-                              //var credentials = await ShowCredentialsDialogAsync(_selectedIp, selectedPort.PortNumber);
+                        //case 554: // RTSP (Streaming)
+                        //var credentials = await ShowCredentialsDialogAsync(_selectedIp, selectedPort.PortNumber);
 
                         //if (credentials.Success) // Si el usuario ingresó credenciales
                         //{
@@ -167,7 +176,7 @@ namespace BeaconScan
                         //Debug.WriteLine("El usuario canceló el ingreso de credenciales.");
                         //statusText.Text = "Conexión RTSP cancelada por el usuario.";
                         //}
-                        break;
+                        //break;
 
                     case 3389: // RDP
                                // Mostrar un cuadro de diálogo para ingresar el dominio/usuario y contraseña
@@ -249,6 +258,9 @@ namespace BeaconScan
 
                 statusText.Text = $"Escaneando puertos para {selectedIp}...";
                 progressRing.IsActive = true;
+                progressRing.Visibility = Visibility.Visible;
+                scanButton.IsEnabled = false;
+                ipListView.IsEnabled = false;
                 portsListView.Items.Clear();
 
                 try
@@ -292,7 +304,11 @@ namespace BeaconScan
                 finally
                 {
                     progressRing.IsActive = false;
+                    progressRing.Visibility = Visibility.Collapsed;
                     _cancellationTokenSource = null;
+                    scanButton.IsEnabled = true;
+                    ipListView.IsEnabled = true;
+                    //BeaconStatusBar.Background(Colors.Blue);
                 }
             }
             else
