@@ -8,7 +8,9 @@ using Microsoft.UI.Xaml.Input;
 using System.Threading.Tasks;
 using System.Threading;
 using System.Diagnostics;
-using Microsoft.UI; // Asegúrate de tener la referencia a Windows.UI.Core para el Dispatcher
+using Microsoft.UI;
+using Microsoft.UI.Windowing;
+using Windows.Foundation.Metadata; // Asegúrate de tener la referencia a Windows.UI.Core para el Dispatcher
 
 namespace BeaconScan
 {
@@ -35,9 +37,11 @@ namespace BeaconScan
         
         bool useSynScan = true; // O según el estado del checkbox
 
-        public MainWindow()
+        public MainWindow(Windows.ApplicationModel.PackageVersion version)
         {
             this.InitializeComponent();
+            
+            ChangeTitleMainBar("Beacon Scam Version " + $"{version.Major}.{version.Minor}.{version.Build}.{version.Revision}");
             baseIp = NetworkScanner.GetLocalBaseIP();
             baseIPTextBlock.Text = baseIp;
             bool useSynScan = UseSynScanCheckBox.IsChecked == true;
@@ -52,6 +56,26 @@ namespace BeaconScan
             }
         }
 
+        private void ChangeTitleMainBar(string pTitulo)
+        {
+            // no UIElement is set for titlebar, default titlebar is created which extends to entire non client area
+            AppWindow.Title = pTitulo;
+
+            //window.ExtendsContentIntoTitleBar = true;
+            // window.SetTitleBar(null);  // optional line as not setting any UIElement as titlebar is same as setting null as titlebar
+        }
+
+        public void CustomizeTitleBar(AppWindow appWindow)
+        {
+            var titleBar = appWindow.TitleBar;
+
+            // Establecer el color de fondo
+            titleBar.BackgroundColor = Colors.Blue;
+
+            // Opcional: Establecer el color de primer plano
+            titleBar.ForegroundColor = Colors.White;
+        }
+
         private async void OnScanButtonClicked(object sender, RoutedEventArgs e)
         {
             var scanButton = sender as Button;
@@ -63,6 +87,8 @@ namespace BeaconScan
             statusText.Text = "Please wait, this will take a few minutes";
             progressRing.IsActive = true;
             progressRing.Visibility = Visibility.Visible;
+            BeaconStatusBar.Background = new Microsoft.UI.Xaml.Media.SolidColorBrush(Colors.Yellow);
+
 
             // Limpiamos la fuente de datos actual
             ipListView.ItemsSource = null;
@@ -97,6 +123,7 @@ namespace BeaconScan
                 progressRing.Visibility = Visibility.Collapsed;
                 _cancellationTokenSource = null;
                 scanButton.IsEnabled = true;
+                BeaconStatusBar.Background = new Microsoft.UI.Xaml.Media.SolidColorBrush(Colors.LightGray);
             }
         }
 
@@ -261,6 +288,7 @@ namespace BeaconScan
                 progressRing.Visibility = Visibility.Visible;
                 scanButton.IsEnabled = false;
                 ipListView.IsEnabled = false;
+                BeaconStatusBar.Background = new Microsoft.UI.Xaml.Media.SolidColorBrush(Colors.Yellow);
                 portsListView.Items.Clear();
 
                 try
@@ -308,7 +336,7 @@ namespace BeaconScan
                     _cancellationTokenSource = null;
                     scanButton.IsEnabled = true;
                     ipListView.IsEnabled = true;
-                    //BeaconStatusBar.Background(Colors.Blue);
+                    BeaconStatusBar.Background = new Microsoft.UI.Xaml.Media.SolidColorBrush(Colors.LightGray);
                 }
             }
             else

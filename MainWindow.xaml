@@ -9,16 +9,15 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
     Title="Beacon Scan">
-
     <Grid x:Name="RootGrid" Background="LightSkyBlue">
         <Grid.Resources>
             <!-- Define los recursos necesarios -->
             <!-- Fondo para ListViewItems -->
             <SolidColorBrush x:Key="ListViewItemBackgroundThemeBrush" Color="White"/>
-            <SolidColorBrush x:Key="ListViewItemSelectedBackgroundThemeBrush" Color="DarkOliveGreen"/>
+            <SolidColorBrush x:Key="ListViewItemSelectedBackgroundThemeBrush" Color="Blue"/>
             <SolidColorBrush x:Key="ListViewItemForegroundThemeBrush" Color="White"/>
             <SolidColorBrush x:Key="ListViewItemSelectedForegroundThemeBrush" Color="OrangeRed"/>
-            <SolidColorBrush x:Key="ListViewItemPointerOverBackgroundThemeBrush" Color="DarkOliveGreen"/>
+            <SolidColorBrush x:Key="ListViewItemPointerOverBackgroundThemeBrush" Color="DarkGray"/>
             <SolidColorBrush x:Key="ListViewItemPressedBackgroundThemeBrush" Color="LightSkyBlue"/>
             <local:AlternationBrushConverter x:Key="AlternationBrushConverter"/>
             <!-- Estilo personalizado para ListViewItem -->
@@ -101,6 +100,18 @@
             </Style>
         </Grid.Resources>
         <muxc:TabView x:Name="MyTabView" Margin="12" VerticalAlignment="Stretch" IsAddTabButtonVisible="false"  Background="LightBlue">
+            <TabView.Resources>
+                <ResourceDictionary>
+                    <ResourceDictionary.ThemeDictionaries>
+                        <ResourceDictionary x:Key="Light">
+                            <SolidColorBrush x:Key="TabViewBackground" Color="{ThemeResource SystemAccentColorLight2}"/>
+                        </ResourceDictionary>
+                        <ResourceDictionary x:Key="Dark">
+                            <SolidColorBrush x:Key="TabViewBackground" Color="{ThemeResource SystemAccentColorDark2}"/>
+                        </ResourceDictionary>
+                    </ResourceDictionary.ThemeDictionaries>
+                </ResourceDictionary>
+            </TabView.Resources>
             <muxc:TabView.TabItems>
                 <muxc:TabViewItem Header="TCP and UDP Port Scanning" IsClosable="False" Background="LightSteelBlue">
                     <TabViewItem.IconSource>
@@ -112,7 +123,6 @@
                             <Grid.Resources>
                                 <local:RowBackgroundConverter x:Key="RowBackgroundConverter"/>
                             </Grid.Resources>
-
                             <!-- Grid Rows -->
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto"/>
@@ -124,23 +134,20 @@
                                 <RowDefinition Height="Auto"/>
                                 <!-- Status/Progress row -->
                             </Grid.RowDefinitions>
-
                             <!-- Grid Columns: Column 0 for IP (narrower), Column 1 for Ports and controls (wider) -->
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="1*"/>
                                 <ColumnDefinition Width="3*"/>
                             </Grid.ColumnDefinitions>
-
                             <!-- Top row, Column 0: Base IP TextBlock and Scan button in a horizontal StackPanel -->
                             <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Horizontal" HorizontalAlignment="Center" Margin="10">
                                 <TextBox x:Name="baseIPTextBlock" 
-                       Text="(unknown)" 
-                       FontWeight="Bold" 
-                       Margin="0,0,10,0" 
-                       VerticalAlignment="Center"/>
-                                <Button x:Name="scanButton" Content="Scan" Click="OnScanButtonClicked" Margin="5"/>
+                                    Text="(unknown)" 
+                                    FontWeight="Bold" 
+                                    Margin="0,0,10,0" 
+                                    VerticalAlignment="Center"/>
+                                <Button x:Name="scanButton" Content="Scan" Click="OnScanButtonClicked" Margin="5" ToolTipService.ToolTip="IP Scanning Process"/>
                             </StackPanel>
-
                             <!-- Top row, Column 1: Cancel and Exit buttons -->
                             <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center" Spacing="10">
                                 <!-- CheckBox con ToolTip para SYN Scan -->
@@ -149,13 +156,11 @@
                                         <ToolTip Content="El SYN Scan permite detectar puertos abiertos enviando paquetes TCP personalizados. Úsalo solo si tienes autorización y permisos administrativos." />
                                     </ToolTipService.ToolTip>
                                 </CheckBox>
-
                                 <!-- Botones existentes -->
-                                <Button x:Name="openWebViewButton" Content="Open WebView" Click="OnOpenWebViewButtonClicked" />
+                                <Button x:Name="openWebViewButton" Content="Open WebView" Click="OnOpenWebViewButtonClicked" ToolTipService.ToolTip="Open Port HTTP, HTPPS, RDP"/>
                                 <Button Content="Cancel" Click="OnCancelarButtonClicked" />
                                 <Button Content="Exit" Click="OnExitButtonClicked" />
                             </StackPanel>
-
                             <!-- Header for the IP List (Column 0) -->
                             <Border Grid.Row="1" Grid.Column="0" Background="LightBlue" Padding="5">
                                 <Grid>
@@ -167,7 +172,6 @@
                                     <TextBlock Text="IP Addresses" Grid.Column="1" FontWeight="Bold" HorizontalAlignment="Center"/>
                                 </Grid>
                             </Border>
-
                             <!-- Header for the Ports List (Column 1) -->
                             <Border Grid.Row="1" Grid.Column="1" Background="LightBlue" Padding="5">
                                 <Grid>
@@ -181,39 +185,44 @@
                                     <TextBlock Text="Service Name" Grid.Column="2" FontWeight="Bold" HorizontalAlignment="Center"/>
                                 </Grid>
                             </Border>
-
                             <!-- ListView for IPs (Column 0) -->
                             <Border Grid.Row="2" Grid.Column="0">
                                 <ListView x:Name="ipListView"
-          BorderBrush="Indigo"
-          BorderThickness="1"
-          SelectionChanged="OnIpSelectionChanged"
-          ScrollViewer.VerticalScrollBarVisibility="Auto"
-          ItemContainerStyle="{StaticResource CustomListViewItemStyle}">
+                                    BorderBrush="Indigo"
+                                    BorderThickness="1"
+                                    SelectionChanged="OnIpSelectionChanged"
+                                    ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                    ItemContainerStyle="{StaticResource CustomListViewItemStyle}">
                                     <ListView.ItemTemplate>
                                         <DataTemplate x:DataType="local:IpItem">
                                             <Grid Background="{Binding IsEven, Converter={StaticResource AlternationBrushConverter}}"
-
-      BorderBrush="Indigo"
-        Margin="1" BorderThickness="1">
+                                                BorderBrush="Indigo"
+                                                BorderThickness="1">
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="100"/>
                                                     <ColumnDefinition Width="100"/>
+                                                    
                                                 </Grid.ColumnDefinitions>
                                                 <TextBlock Text="{x:Bind Hostname}" Grid.Column="0" VerticalAlignment="Center"/>
                                                 <TextBlock Text="{x:Bind IpAddress}" Grid.Column="1" VerticalAlignment="Center"/>
                                             </Grid>
-
                                         </DataTemplate>
                                     </ListView.ItemTemplate>
                                 </ListView>
                             </Border>
                             <!-- ListView for Ports (Column 1) -->
                             <Border Grid.Row="2" Grid.Column="1">
-                                <ListView x:Name="portsListView" BorderBrush="Indigo" BorderThickness="1" ScrollViewer.VerticalScrollBarVisibility="Auto" SelectionMode="Single" SelectionChanged="PortsListView_SelectionChanged">
+                                <ListView x:Name="portsListView" 
+                                    SelectionChanged="PortsListView_SelectionChanged"
+                                    BorderBrush="Indigo"
+                                    BorderThickness="1"
+                                    ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                    ItemContainerStyle="{StaticResource CustomListViewItemStyle}">
                                     <ListView.ItemTemplate>
                                         <DataTemplate>
-                                            <Grid Background="Transparent" Margin="0" BorderBrush="Indigo"  BorderThickness="1">
+                                            <Grid Background="{Binding IsEven, Converter={StaticResource AlternationBrushConverter}}"
+                                                BorderBrush="Indigo"
+                                                BorderThickness="1">
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="100"/>
                                                     <ColumnDefinition Width="100"/>
@@ -228,7 +237,6 @@
                                 </ListView>
                             </Border>
                         </Grid>
-
                     </TabViewItem.Content>
                 </muxc:TabViewItem>
                 <!-- Nueva Pestaña: SSH -->
@@ -247,7 +255,6 @@
                                 <RowDefinition Height="*"/>
                                 <!-- Terminal ocupa el resto -->
                             </Grid.RowDefinitions>
-
                             <!-- Sección de Conexión -->
                             <StackPanel Orientation="Horizontal" Margin="0,0,0,10" Grid.Row="0">
                                 <TextBlock Text="Host:" VerticalAlignment="Center" Margin="5"/>
@@ -258,13 +265,11 @@
                                 <PasswordBox x:Name="passwordBox" Width="150" Margin="5"/>
                                 <Button Content="Connect" Click="OnConnectSSH" Width="100" HorizontalAlignment="Left" Margin="5"/>
                             </StackPanel>
-
                             <!-- Sección de comandos -->
                             <StackPanel Orientation="Horizontal" Margin="0,0,0,10" Grid.Row="1">
                                 <TextBox x:Name="commandTextBox" Width="400" Margin="5" PlaceholderText="Escribe el comando..."/>
                                 <Button Content="Send" Click="OnSendCommand" Width="150" HorizontalAlignment="Left" Margin="5"/>
                             </StackPanel>
-
                             <!-- Terminal Interactivo -->
                             <Border BorderBrush="LightYellow" BorderThickness="1" Margin="0,10,0,0" Grid.Row="2" Background="Black">
                                 <ScrollViewer x:Name="terminalScrollViewer" VerticalScrollBarVisibility="Auto">
@@ -295,7 +300,6 @@
                                 <!-- Sección de Directorios ocupa el espacio restante -->
                                 <RowDefinition Height="*"/>
                             </Grid.RowDefinitions>
-
                             <!-- Sección de Conexión -->
                             <StackPanel Orientation="Horizontal" Margin="0,0,0,10" Grid.Row="0">
                                 <TextBlock Text="Host:" VerticalAlignment="Center" Margin="5"/>
@@ -306,7 +310,6 @@
                                 <PasswordBox x:Name="ftpPasswordBox" Width="150" Margin="5"/>
                                 <Button Content="Connect" Click="OnConnectFTP" Width="100" HorizontalAlignment="Left" Margin="5"/>
                             </StackPanel>
-
                             <!-- Sección de Directorios -->
                             <Grid Grid.Row="1">
                                 <Grid.ColumnDefinitions>
@@ -314,19 +317,18 @@
                                     <ColumnDefinition Width="Auto" />
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
-
                                 <ListView x:Name="localDirListBox" 
-	Grid.Column="0" 
-	Margin="5" 
-	BorderBrush="Indigo" 
-	BorderThickness="1" 
-	DoubleTapped="LocalDirListBox_DoubleTapped"
-	ItemContainerStyle="{StaticResource CustomListViewItemStyle}">
+	                                Grid.Column="0" 
+	                                Margin="5" 
+	                                BorderBrush="Indigo" 
+	                                BorderThickness="1" 
+	                                DoubleTapped="LocalDirListBox_DoubleTapped"
+	                                ItemContainerStyle="{StaticResource CustomListViewItemStyle}">
                                     <ListView.ItemTemplate>
                                         <DataTemplate x:DataType="local:FileItem">
                                             <Grid Background="{Binding IsEven, Converter={StaticResource AlternationBrushConverter}}"
-		BorderBrush="Indigo"
-                Margin="1" BorderThickness="1">
+		                                        BorderBrush="Indigo"
+                                                Margin="1" BorderThickness="1">
                                                 <StackPanel Orientation="Horizontal">
                                                     <TextBlock Text="{x:Bind Name}" Width="200"/>
                                                     <TextBlock Text="{x:Bind Type}" Width="50"/>
@@ -335,27 +337,24 @@
                                         </DataTemplate>
                                     </ListView.ItemTemplate>
                                 </ListView>
-
-
                                 <!-- Botones de Transferencia -->
                                 <StackPanel Grid.Column="1" Orientation="Vertical" VerticalAlignment="Center" Margin="5">
                                     <Button Content="→" Click="OnUploadFile" Width="40" Height="40" Margin="5"/>
                                     <Button Content="←" Click="OnDownloadFile" Width="40" Height="40" Margin="5"/>
                                 </StackPanel>
-
                                 <!-- Directorio Remoto -->
                                 <ListView x:Name="remoteDirListBox" 
-Grid.Column="2" 
-Margin="5" 
-BorderBrush="Indigo" 
-BorderThickness="1" 
-DoubleTapped="RemoteDirListBox_DoubleTapped"
-ItemContainerStyle="{StaticResource CustomListViewItemStyle}">
+                                    Grid.Column="2" 
+                                    Margin="5" 
+                                    BorderBrush="Indigo" 
+                                    BorderThickness="1" 
+                                    DoubleTapped="RemoteDirListBox_DoubleTapped"
+                                    ItemContainerStyle="{StaticResource CustomListViewItemStyle}">
                                     <ListView.ItemTemplate>
                                         <DataTemplate x:DataType="local:FileItem">
                                             <Grid Background="{Binding IsEven, Converter={StaticResource AlternationBrushConverter}}"
-	BorderBrush="Indigo"
-            Margin="1" BorderThickness="1">
+	                                            BorderBrush="Indigo"
+                                                Margin="1" BorderThickness="1">
                                                 <StackPanel Orientation="Horizontal">
                                                     <TextBlock Text="{x:Bind Name}" Width="200"/>
                                                     <TextBlock Text="{x:Bind Type}" Width="50"/>
@@ -382,23 +381,23 @@ ItemContainerStyle="{StaticResource CustomListViewItemStyle}">
 
                 <!-- ProgressRing -->
                 <ProgressRing x:Name="progressRing" 
-                      Grid.Column="0"
-                      IsActive="False" 
-                      Visibility="Collapsed" 
-                      Width="32" 
-                      Height="32" 
-                      HorizontalAlignment="Center" 
-                      VerticalAlignment="Center"/>
+                    Grid.Column="0"
+                    IsActive="False" 
+                    Visibility="Collapsed" 
+                    Width="32" 
+                    Height="32" 
+                    HorizontalAlignment="Center" 
+                    VerticalAlignment="Center"/>
 
                 <!-- TextBlock (Status) -->
                 <TextBlock x:Name="statusText" 
-                   Grid.Column="1"
-                   Text="Program Status" 
-                   FontWeight="Bold" 
-                   TextAlignment="Center" 
-                   Margin="10,0,0,0"
-                   VerticalAlignment="Center"
-                   HorizontalAlignment="Center"/>
+                    Grid.Column="1"
+                    Text="Program Status" 
+                    FontWeight="Bold" 
+                    TextAlignment="Center" 
+                    Margin="10,0,0,0"
+                    VerticalAlignment="Center"
+                    HorizontalAlignment="Center"/>
             </Grid>
         </Border>
     </Grid>
