@@ -26,7 +26,12 @@ BeaconScan is **not** a replacement for tools like `nmap`—it does **not** rely
 
 ## 📸 UI Preview
 
-*(Coming soon: screenshots and/or video demo)*
+## 📸 UI Preview
+
+![Main Screen](https://github.com/Taguapire/BeaconScan/blob/master/resources/Principal_Screen.png)
+
+The main interface displays discovered devices in a custom `ListView`, showing IP addresses and detected open ports. It's designed for clarity and speed, with a layout that feels both modern and efficient.
+
 
 ## 🚧 Disclaimer
 
