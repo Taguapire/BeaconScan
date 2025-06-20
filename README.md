@@ -17,6 +17,17 @@
 
 BeaconScan is **not** a replacement for tools like `nmap`—it does **not** rely on packet capture (`pcap`) libraries. Instead, it uses lightweight probing with a predefined list of ports. If you need to scan a wider range, you can modify the source code under the `PortScan` module.
 
+# 🧩 Requirements
+
+To build and run BeaconScan, you’ll need:
+
+- **Visual Studio 2022** (latest release recommended)
+- **.NET 8 SDK**
+- Windows 10/11 with support for WinUI 3 (App SDK runtime)
+
+Make sure the `Windows App SDK` and `Desktop Development with C++` workloads are installed via the Visual Studio Installer, as WinUI 3 depends on them.
+
+
 ## 🧰 Tech Stack
 
 - C# (.NET 7 or later)
