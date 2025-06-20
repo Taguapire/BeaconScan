@@ -12,6 +12,6 @@ namespace BeaconScan
         public string Hostname { get; set; }
         public string IpAddress { get; set; }
 #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
-        public bool IsEven { get; set; }  // Agregamos esta propiedad para alternar colores de fondo
+        public bool IsEven { get; set; }  // Added this property to alternate background colors
     }
 }

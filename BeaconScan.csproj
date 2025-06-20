@@ -87,7 +87,7 @@
     <Title>Beacon Scan IP</Title>
     <Authors>Luis Vasquez</Authors>
     <Company>PENTALPHA EIRL</Company>
-    <Description>Programa de Scanner IP en una RED 0/24</Description>
+    <Description>IP Scanner Program on a /24 Network</Description>
     <Copyright>LUIS VASQUEZ CONSULTORES EIRL</Copyright>
     <PackageCertificateKeyFile>BeaconScan_TemporaryKey.pfx</PackageCertificateKeyFile>
     <AppxPackageSigningEnabled>True</AppxPackageSigningEnabled>

@@ -62,7 +62,7 @@ namespace BeaconScan
 
 
         /// <summary>
-        /// Lista los archivos y carpetas en un directorio remoto, omitiendo "." y "..".
+        /// Lists the files and directories in a remote folder, omitting "." and "..".
         /// </summary>
         public List<FileItem> GetRemoteFileList(string remotePath)
         {
@@ -74,21 +74,21 @@ namespace BeaconScan
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"Error al conectar al servidor SFTP: {ex.Message}");
+                    Console.WriteLine($"Error connecting to the SFTP server: {ex.Message}");
                     throw;
                 }
             }
 
             var remoteFiles = new List<FileItem>();
 
-            // Validar que el remotePath es válido
+            // Validate that the remotePath is valid
             if (string.IsNullOrWhiteSpace(remotePath))
             {
-                Console.WriteLine("El directorio remoto es inválido.");
+                Console.WriteLine("The remote directory is invalid.");
                 return remoteFiles;
             }
 
-            // Agregar ".." sólo si no estamos en la raíz
+            // Add ".." only if we are not in the root directory
             if (remotePath != "/")
             {
                 remoteFiles.Add(new FileItem
@@ -98,7 +98,7 @@ namespace BeaconScan
                 });
             }
 
-            // Listar los archivos del directorio
+            // List the files in the directory
             try
             {
                 var files = _sftpClient.ListDirectory(remotePath).ToList();
@@ -116,19 +116,15 @@ namespace BeaconScan
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error al listar el directorio remoto: {ex.Message}");
+                Console.WriteLine($"Error listing the remote directory: {ex.Message}");
             }
 
             return remoteFiles;
         }
 
 
-
-
-
-
         /// <summary>
-        /// Sube un archivo desde el sistema local al servidor remoto.
+        /// Uploads a file from the local system to the remote server.
         /// </summary>
         public void UploadFile(string localFilePath, string remoteFilePath)
         {
@@ -139,7 +135,7 @@ namespace BeaconScan
         }
 
         /// <summary>
-        /// Descarga un archivo del servidor remoto al sistema local.
+        /// Downloads a file from the remote server to the local system.
         /// </summary>
         public void DownloadFile(string remoteFilePath, string localFilePath)
         {

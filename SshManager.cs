@@ -9,7 +9,7 @@ namespace BeaconScan
     public class SshManager : IDisposable
     {
         private SSHNET.SshClient _sshClient;
-        // Se marcan como nullable porque se inicializan más tarde
+        // Marked as nullable because they are initialized later
         private SSHNET.ShellStream? _shellStream;
         private CancellationTokenSource? _cancellationTokenSource;
         private bool _disposed = false;
@@ -43,7 +43,7 @@ namespace BeaconScan
         }
 
         /// <summary>
-        /// Ejecuta un comando y devuelve el resultado.
+        /// Executes a command and returns the result.
         /// </summary>
         public string RunCommand(string command)
         {
@@ -54,18 +54,18 @@ namespace BeaconScan
         }
 
         /// <summary>
-        /// Inicia una shell interactiva y registra un callback para recibir la salida.
+        /// Starts an interactive shell and registers a callback to receive the output.
         /// </summary>
         public void StartInteractiveShell(Action<string> onDataReceived)
         {
             if (!_sshClient.IsConnected)
                 throw new InvalidOperationException("SSH is not connected.");
 
-            // Crea el ShellStream con parámetros básicos (tipo terminal "xterm")
+            // Creates the ShellStream with basic parameters (terminal type "xterm")
             _shellStream = _sshClient.CreateShellStream("xterm", 80, 24, 800, 600, 1024);
             _cancellationTokenSource = new CancellationTokenSource();
 
-            // Lee los datos de la shell de forma asíncrona
+            // Reads shell data asynchronously
             Task.Run(async () => await ReadShellStreamAsync(onDataReceived, _cancellationTokenSource.Token));
         }
 
@@ -91,7 +91,7 @@ namespace BeaconScan
         }
 
         /// <summary>
-        /// Envía una línea de texto (comando) al shell interactivo.
+        /// Sends a line of text (command) to the interactive shell.
         /// </summary>
         public void SendInput(string input)
         {
@@ -115,17 +115,17 @@ namespace BeaconScan
         {
             if (!_sshClient.IsConnected)
             {
-                throw new InvalidOperationException("No hay una conexión SSH activa.");
+                throw new InvalidOperationException("There is no active SSH connection.");
             }
 
             try
             {
-                var cmd = _sshClient.CreateCommand(command); // `_sshClient` es tu instancia de SshClient
-                return cmd.Execute(); // Ejecuta el comando y devuelve la salida
+                var cmd = _sshClient.CreateCommand(command); // `_sshClient` is your SshClient instance
+                return cmd.Execute(); // Executes the command and returns the output
             }
             catch (Exception ex)
             {
-                throw new Exception($"Error al ejecutar el comando '{command}': {ex.Message}");
+                throw new Exception($"Error executing the command '{command}': {ex.Message}");
             }
         }
     }

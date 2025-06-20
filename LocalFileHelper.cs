@@ -2,12 +2,11 @@
 using System.Collections.Generic;
 using System.IO;
 
-
 namespace BeaconScan
 {
     public static class LocalFileHelper
     {
-        // Método para obtener una lista de archivos en el directorio especificado
+        // Method to retrieve a list of files in the specified directory
         public static List<FileItem> GetLocalFileList(string localPath)
         {
             var fileList = new List<FileItem>();
@@ -21,24 +20,22 @@ namespace BeaconScan
                     {
                         fileList.Add(new FileItem
                         {
-                            Name = Path.GetFileName(entry), // Extraer el nombre del archivo/directorio
-                            Type = Directory.Exists(entry) ? "D" : "F" // Determinar tipo (Directorio/Archivo)
+                            Name = Path.GetFileName(entry), // Extract the file or directory name
+                            Type = Directory.Exists(entry) ? "D" : "F" // Determine type (Directory/File)
                         });
                     }
                 }
                 else
                 {
-                    throw new DirectoryNotFoundException($"El directorio {localPath} no existe.");
+                    throw new DirectoryNotFoundException($"Directory {localPath} does not exist.");
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error al obtener la lista de archivos: {ex.Message}");
+                Console.WriteLine($"Error retrieving file list: {ex.Message}");
             }
 
             return fileList;
         }
-
-
     }
 }

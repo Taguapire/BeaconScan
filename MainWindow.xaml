@@ -11,8 +11,8 @@
     Title="Beacon Scan">
     <Grid x:Name="RootGrid" Background="LightSkyBlue">
         <Grid.Resources>
-            <!-- Define los recursos necesarios -->
-            <!-- Fondo para ListViewItems -->
+            <!-- Define necessary resources -->
+            <!-- Background for ListViewItems -->
             <SolidColorBrush x:Key="ListViewItemBackgroundThemeBrush" Color="White"/>
             <SolidColorBrush x:Key="ListViewItemSelectedBackgroundThemeBrush" Color="Blue"/>
             <SolidColorBrush x:Key="ListViewItemForegroundThemeBrush" Color="White"/>
@@ -20,18 +20,18 @@
             <SolidColorBrush x:Key="ListViewItemPointerOverBackgroundThemeBrush" Color="DarkGray"/>
             <SolidColorBrush x:Key="ListViewItemPressedBackgroundThemeBrush" Color="LightSkyBlue"/>
             <local:AlternationBrushConverter x:Key="AlternationBrushConverter"/>
-            <!-- Estilo personalizado para ListViewItem -->
+            <!-- Custom style for ListViewItem -->
             <Style x:Key="CustomListViewItemStyle" TargetType="ListViewItem">
                 <Setter Property="Padding" Value="0"/>
                 <Setter Property="Margin" Value="0"/>
                 <Setter Property="MinHeight" Value="0"/>
                 <Setter Property="VerticalContentAlignment" Value="Center"/>
-                <!-- Fijamos Foreground predeterminado -->
+                <!-- Set default Foreground color -->
                 <Setter Property="Foreground" Value="Black" />
                 <Setter Property="Template">
                     <Setter.Value>
                         <ControlTemplate TargetType="ListViewItem">
-                            <!-- ListViewItemPresenter es el elemento raíz -->
+                            <!-- ListViewItemPresenter is the root element -->
                             <ListViewItemPresenter
                         x:Name="ContentPresenter"
                         ContentTransitions="{TemplateBinding ContentTransitions}"
@@ -43,9 +43,9 @@
                         Foreground="{ThemeResource ListViewItemForegroundThemeBrush}"
                         PointerOverBackground="{ThemeResource ListViewItemPointerOverBackgroundThemeBrush}"
                         PressedBackground="{ThemeResource ListViewItemPressedBackgroundThemeBrush}">
-                                <!-- Definimos los estados visuales como parte del ListViewItemPresenter -->
+                                <!-- Define visual states as part of the ListViewItemPresenter -->
                                 <VisualStateManager.VisualStateGroups>
-                                    <!-- Estados comunes -->
+                                    <!-- Common states -->
                                     <VisualStateGroup x:Name="CommonStates">
                                         <VisualState x:Name="Normal"/>
                                         <VisualState x:Name="PointerOver">
@@ -62,7 +62,7 @@
                                         </VisualState>
                                         <VisualState x:Name="Pressed"/>
                                     </VisualStateGroup>
-                                    <!-- Estados de selección -->
+                                    <!-- Selection states -->
                                     <VisualStateGroup x:Name="SelectionStates">
                                         <VisualState x:Name="Unselected"/>
                                         <VisualState x:Name="Selected">
@@ -153,10 +153,10 @@
                                 <!-- CheckBox con ToolTip para SYN Scan -->
                                 <CheckBox x:Name="UseSynScanCheckBox" Content="Usar SYN Scan" VerticalAlignment="Center" Checked="UseSynScanCheckBox_Checked" Unchecked="UseSynScanCheckBox_Unchecked">
                                     <ToolTipService.ToolTip>
-                                        <ToolTip Content="El SYN Scan permite detectar puertos abiertos enviando paquetes TCP personalizados. Úsalo solo si tienes autorización y permisos administrativos." />
+                                        <ToolTip Content="SYN Scan detects open ports by sending custom TCP packets. Use only with proper authorization and administrative privileges." />
                                     </ToolTipService.ToolTip>
                                 </CheckBox>
-                                <!-- Botones existentes -->
+                                <!-- Existing buttons -->
                                 <Button x:Name="openWebViewButton" Content="Open WebView" Click="OnOpenWebViewButtonClicked" ToolTipService.ToolTip="Open Port HTTP, HTPPS, RDP"/>
                                 <Button Content="Cancel" Click="OnCancelarButtonClicked" />
                                 <Button Content="Exit" Click="OnExitButtonClicked" />
@@ -239,23 +239,23 @@
                         </Grid>
                     </TabViewItem.Content>
                 </muxc:TabViewItem>
-                <!-- Nueva Pestaña: SSH -->
+                <!-- New Tab: Secure Shell (SSH) -->
                 <muxc:TabViewItem Header="SSH" IsClosable="False" Background="LightSteelBlue">
                     <TabViewItem.IconSource>
                         <SymbolIconSource Symbol="Keyboard" />
                     </TabViewItem.IconSource>
                     <TabViewItem.Content>
                         <Grid Margin="12">
-                            <!-- Definimos filas dinámicas -->
+                            <!-- Define dynamic rows -->
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto"/>
-                                <!-- Sección de Conexión -->
+                                <!-- Connection Section -->
                                 <RowDefinition Height="Auto"/>
-                                <!-- Sección de Comandos -->
+                                <!-- Commands Section -->
                                 <RowDefinition Height="*"/>
-                                <!-- Terminal ocupa el resto -->
+                                <!-- Terminal occupies the remaining layout -->
                             </Grid.RowDefinitions>
-                            <!-- Sección de Conexión -->
+                            <!-- Connection Section -->
                             <StackPanel Orientation="Horizontal" Margin="0,0,0,10" Grid.Row="0">
                                 <TextBlock Text="Host:" VerticalAlignment="Center" Margin="5"/>
                                 <TextBox x:Name="hostTextBox" Width="200" Margin="5"/>
@@ -265,12 +265,12 @@
                                 <PasswordBox x:Name="passwordBox" Width="150" Margin="5"/>
                                 <Button Content="Connect" Click="OnConnectSSH" Width="100" HorizontalAlignment="Left" Margin="5"/>
                             </StackPanel>
-                            <!-- Sección de comandos -->
+                            <!-- Commands Section -->
                             <StackPanel Orientation="Horizontal" Margin="0,0,0,10" Grid.Row="1">
                                 <TextBox x:Name="commandTextBox" Width="400" Margin="5" PlaceholderText="Escribe el comando..."/>
                                 <Button Content="Send" Click="OnSendCommand" Width="150" HorizontalAlignment="Left" Margin="5"/>
                             </StackPanel>
-                            <!-- Terminal Interactivo -->
+                            <!-- Interactive Shell Interface -->
                             <Border BorderBrush="LightYellow" BorderThickness="1" Margin="0,10,0,0" Grid.Row="2" Background="Black">
                                 <ScrollViewer x:Name="terminalScrollViewer" VerticalScrollBarVisibility="Auto">
                                     <TextBlock x:Name="sshOutputTextBlock" 
@@ -286,26 +286,26 @@
                         </Grid>
                     </TabViewItem.Content>
                 </muxc:TabViewItem>
-                <!-- Nueva Pestaña: SFTP -->
+                <!-- New Tab: Secure Shell FTP(SFTP) -->
                 <muxc:TabViewItem Header="FTP" IsClosable="False" Background="LightSteelBlue">
                     <TabViewItem.IconSource>
                         <SymbolIconSource Symbol="Upload" />
                     </TabViewItem.IconSource>
                     <TabViewItem.Content>
                         <Grid Margin="12">
-                            <!-- Definición de filas -->
+                            <!-- Define rows -->
                             <Grid.RowDefinitions>
-                                <!-- Sección de Conexión ocupa solo el espacio necesario -->
+                                <!-- Connection Section occupies only the necessary space -->
                                 <RowDefinition Height="Auto"/>
-                                <!-- Sección de Directorios ocupa el espacio restante -->
+                                <!-- Directory Section occupies the remaining space -->
                                 <RowDefinition Height="*"/>
                             </Grid.RowDefinitions>
-                            <!-- Sección de Conexión -->
+                            <!-- Connection Section -->
                             <StackPanel Orientation="Horizontal" Margin="0,0,0,10" Grid.Row="0">
                                 <TextBlock Text="Host:" VerticalAlignment="Center" Margin="5"/>
-                                <TextBox x:Name="ftpHostTextBox" Width="200" Margin="5" PlaceholderText="Ingresa el host"/>
+                                <TextBox x:Name="ftpHostTextBox" Width="200" Margin="5" PlaceholderText="Enter the host"/>
                                 <TextBlock Text="Login:" VerticalAlignment="Center" Margin="5"/>
-                                <TextBox x:Name="ftpLoginTextBox" Width="150" Margin="5" PlaceholderText="Usuario"/>
+                                <TextBox x:Name="ftpLoginTextBox" Width="150" Margin="5" PlaceholderText="Username"/>
                                 <TextBlock Text="Password:" VerticalAlignment="Center" Margin="5"/>
                                 <PasswordBox x:Name="ftpPasswordBox" Width="150" Margin="5"/>
                                 <Button Content="Connect" Click="OnConnectFTP" Width="100" HorizontalAlignment="Left" Margin="5"/>
@@ -337,12 +337,12 @@
                                         </DataTemplate>
                                     </ListView.ItemTemplate>
                                 </ListView>
-                                <!-- Botones de Transferencia -->
+                                <!-- Transfer Buttons -->
                                 <StackPanel Grid.Column="1" Orientation="Vertical" VerticalAlignment="Center" Margin="5">
                                     <Button Content="→" Click="OnUploadFile" Width="40" Height="40" Margin="5"/>
                                     <Button Content="←" Click="OnDownloadFile" Width="40" Height="40" Margin="5"/>
                                 </StackPanel>
-                                <!-- Directorio Remoto -->
+                                <!-- Remote Directory -->
                                 <ListView x:Name="remoteDirListBox" 
                                     Grid.Column="2" 
                                     Margin="5" 
@@ -369,12 +369,12 @@
                 </muxc:TabViewItem>
             </muxc:TabView.TabItems>
         </muxc:TabView>
-        <!-- Barra de estado -->
+        <!-- Status Bar -->
         <Border Name ="BeaconStatusBar" Background="LightGray" BorderBrush="Indigo" Height="35" BorderThickness="1" HorizontalAlignment="Stretch" VerticalAlignment="Bottom">
             <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
-                    <!-- Para el ProgressRing -->
+                    <!-- For the ProgressRing -->
                     <ColumnDefinition Width="Auto"/>
                     <!-- Para el TextBlock -->
                 </Grid.ColumnDefinitions>
@@ -389,7 +389,7 @@
                     HorizontalAlignment="Center" 
                     VerticalAlignment="Center"/>
 
-                <!-- TextBlock (Status) -->
+                <!-- For the TextBlock -->
                 <TextBlock x:Name="statusText" 
                     Grid.Column="1"
                     Text="Program Status" 

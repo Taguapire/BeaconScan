@@ -11,16 +11,16 @@ namespace BeaconScan
         {
             if (value is ListViewItem item && parameter is ListView listView)
             {
-                // Obtener el índice del elemento dentro del ListView
+                // Get the index of the item within the ListView
                 int index = listView.IndexFromContainer(item);
 
-                // Alternar colores según el índice (par o impar)
+                // Alternate colors based on index (even or odd)
                 return (index % 2 == 0)
                     ? new SolidColorBrush(Microsoft.UI.Colors.White)
                     : new SolidColorBrush(Microsoft.UI.Colors.LightGray);
             }
 
-            // Color predeterminado si falla algo
+            // Default color in case something fails
             return new SolidColorBrush(Microsoft.UI.Colors.Transparent);
         }
 

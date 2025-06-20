@@ -9,9 +9,8 @@ namespace BeaconScan
     public class FileItem
     {
         public string? Name { get; set; }
-        public string? Type { get; set; } // "D" para Directorio, "F" para Archivo
-
-        // Propiedad para zebra striping: true para filas pares, false para impares.
+        public string? Type { get; set; }// "D" for Directory, "F" for File
+        // Property used for zebra striping: true for even rows, false for odd ones.
         public bool IsEven { get; set; }
     }
 }

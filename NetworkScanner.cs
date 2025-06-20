@@ -11,7 +11,7 @@ namespace BeaconScan
 {
     static class NetworkScanner
     {
-        // Busca direccion Base
+        // Locate base address
         public static string GetLocalBaseIP()
         {
             try
@@ -37,7 +37,7 @@ namespace BeaconScan
             return "unknown";
         }
 
-        // Escaneo de puertos TCP y UDP
+        // TCP and UDP port scanning
         public static async Task<List<PortDetails>> ScanPortsAsync(string ip, IEnumerable<int> portNumbers, CancellationToken cancellationToken)
         {
             var openPorts = new List<PortDetails>();
@@ -57,7 +57,7 @@ namespace BeaconScan
                     {
                         var portInfo = portRegistry.FindByPortNumber(port);
 
-                        // Convertimos PortInfo a PortDetails
+                        // Convert PortInfo object to PortDetails for extended information and display formatting
 #pragma warning disable CS8601 // Possible null reference assignment.
                         var portDetails = new PortDetails
                         {
@@ -80,7 +80,7 @@ namespace BeaconScan
         }
 
 
-        // Método para verificar si un puerto TCP está abierto
+        // Method to check if a TCP port is open on the target host
         private static async Task<bool> IsTcpPortOpenAsync(string ip, int port, int timeout)
         {
             using (TcpClient tcpClient = new TcpClient())
@@ -98,7 +98,7 @@ namespace BeaconScan
                 }
                 catch (SocketException ex)
                 {
-                    // Registrar error y tratar ConnectionRefused como indicador de que el servicio está activo.
+                    // Log the error and treat ConnectionRefused as a sign that the service is reachable but not accepting connections
                     Console.WriteLine($"[TCP] Error connecting to {ip}:{port} - {ex.Message}");
                     if (ex.SocketErrorCode == SocketError.ConnectionRefused)
                         return true;
@@ -111,7 +111,7 @@ namespace BeaconScan
             }
         }
 
-        // Método para verificar si un puerto UDP está abierto
+        // Method to check if a UDP port is open on the target host
         private static async Task<bool> IsUdpPortOpenAsync(string ip, int port, int timeout)
         {
             using (UdpClient udpClient = new UdpClient())
@@ -120,11 +120,11 @@ namespace BeaconScan
                 {
                     udpClient.Connect(ip, port);
 
-                    // Enviar un paquete vacío.
+                    // Send an empty packet.
                     byte[] sendBytes = new byte[1];
                     udpClient.Send(sendBytes, sendBytes.Length);
 
-                    // Usamos la versión asíncrona para recibir datos.
+                    // We use the asynchronous version to receive data from the stream without blocking the UI thread
                     var receiveTask = udpClient.ReceiveAsync();
 
                     if (await Task.WhenAny(receiveTask, Task.Delay(timeout)) == receiveTask)
@@ -153,49 +153,51 @@ namespace BeaconScan
             }
         }
 
-        // Escaneo de red para IPs activas
+        // Network scan to detect active IPs in the target subnet
+
         public static async Task<List<IpItem>> ScanNetworkAsync(string baseIp, bool useSynScan, CancellationToken cancellationToken)
         {
             var activeIps = new List<IpItem>();
 
-            // Validar si la base IP es válida antes de proceder
+            // Validate if the base IP is valid before proceeding
             if (string.IsNullOrWhiteSpace(baseIp) || !baseIp.Contains("."))
             {
                 Console.WriteLine("Invalid base IP provided for network scan.");
                 return activeIps;
             }
 
-            // Nos aseguramos de que baseIp termine con un punto (e.g., "192.168.8.")
+            // Ensure baseIp ends with a dot (e.g., "192.168.8.")
             if (!baseIp.EndsWith("."))
             {
                 baseIp = baseIp.Substring(0, baseIp.LastIndexOf('.') + 1);
             }
 
-            // Paso 1: Escaneo tradicional usando Ping
-            Console.WriteLine("Realizando escaneo tradicional con Ping...");
+            // Step 1: Traditional scan using ICMP Ping to identify reachable IPs
+            Console.WriteLine("Performing traditional scan with Ping...");
             var pingResults = await PerformPingScanAsync(baseIp, cancellationToken);
             activeIps.AddRange(pingResults);
 
-            // Paso 2: Ejecutar SYN Scan opcional
+            // Step 2: Perform optional SYN scan on specified port (default: 80)
             if (useSynScan)
             {
-                Console.WriteLine("Ejecutando SYN Scan...");
-                var synScanResults = await PerformSynScanAsync(baseIp, 80, cancellationToken); // Puerto 80 como ejemplo
+                Console.WriteLine("Executing SYN Scan...");
+                var synScanResults = await PerformSynScanAsync(baseIp, 80, cancellationToken); // Port 80 as example
                 activeIps.AddRange(synScanResults);
             }
 
-            // Paso 3: Integración con UPnP
-            Console.WriteLine("Buscando dispositivos UPnP...");
+            // Step 3: Integrate UPnP discovery to identify additional network devices
+            Console.WriteLine("Searching for UPnP-enabled devices...");
             var upnpResults = await PerformUPnPDiscoveryAsync(activeIps);
-            activeIps.AddRange(upnpResults);
+            activeIps.AddRange(pingResults);
 
-            // Eliminar duplicados (por si alguna IP aparece en varios métodos)
+            // Remove duplicates in case the same IP was discovered through multiple methods
             activeIps = activeIps.GroupBy(ip => ip.IpAddress)
                                  .Select(group => group.First())
                                  .OrderBy(ip => int.Parse(ip.IpAddress.Split('.').Last()))
                                  .ToList();
 
-            // Resolver hostnames para cada IP detectada
+
+            // Resolve hostnames for each detected IP
             foreach (var ipItem in activeIps)
             {
                 try
@@ -205,11 +207,11 @@ namespace BeaconScan
                 }
                 catch (Exception)
                 {
-                    ipItem.Hostname = ipItem.Hostname ?? "Unknown"; // Si no se puede resolver, establecer "Unknown"
+                    ipItem.Hostname ??= "Unknown"; // Fallback if resolution fails
                 }
             }
 
-            // Asignar la propiedad IsEven para alternar colores en la UI
+            // Assign IsEven flag to alternate UI row styling
             for (int i = 0; i < activeIps.Count; i++)
             {
                 activeIps[i].IsEven = (i % 2 == 0);
@@ -221,7 +223,7 @@ namespace BeaconScan
         private static async Task<List<IpItem>> PerformPingScanAsync(string baseIp, CancellationToken cancellationToken)
         {
             var activeIps = new List<IpItem>();
-            var semaphore = new SemaphoreSlim(50); // Limitar a 50 tareas concurrentes
+            var semaphore = new SemaphoreSlim(50); 
             var tasks = new List<Task>();
 
             for (int i = 1; i <= 254; i++)
@@ -264,7 +266,7 @@ namespace BeaconScan
         public static async Task<List<IpItem>> PerformSynScanAsync(string baseIp, int port, CancellationToken cancellationToken)
         {
             var activeIps = new List<IpItem>();
-            var semaphore = new SemaphoreSlim(50); // Limitar a 50 tareas concurrentes
+            var semaphore = new SemaphoreSlim(50); 
             var tasks = new List<Task>();
 
             for (int i = 1; i <= 254; i++)
@@ -313,31 +315,31 @@ namespace BeaconScan
 
             try
             {
-                // Configuramos un timeout de 5 segundos
+                // Set a 5-second timeout
                 using var cts = new CancellationTokenSource(5000);
 
-                // Descubrimos un dispositivo UPnP en la red
+                // Discover a UPnP device on the network
                 var device = await OpenNat.Discoverer.DiscoverDeviceAsync(PortMapper.Upnp, cts.Token);
 
-                Console.WriteLine($"UPnP: Dispositivo encontrado en {device}");
+                Console.WriteLine($"UPnP: Device found at {device}");
 
-                // Obtenemos la IP externa, la convertimos a string
+                // Get the external IP and convert it to string
                 var ipAddress = await device.GetExternalIPAsync();
                 var ipAddressStr = ipAddress.ToString();
 
-                // Verificamos si la IP ya está en la lista (comparando cadenas)
+                // Check if the IP is already in the list (compare as strings)
                 if (currentIps.All(ipItem => ipItem.IpAddress != ipAddressStr))
                 {
                     discoveredIps.Add(new IpItem
                     {
                         IpAddress = ipAddressStr,
-                        Hostname = "UPnP Device" // Los dispositivos UPnP a veces no devuelven un hostname
+                        Hostname = "UPnP Device" // UPnP devices sometimes don't return a hostname
                     });
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error en descubrimiento UPnP: {ex.Message}");
+                Console.WriteLine($"Error during UPnP discovery: {ex.Message}");
             }
 
             return discoveredIps;

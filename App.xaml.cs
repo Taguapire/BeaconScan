@@ -20,24 +20,24 @@ namespace BeaconScan
         public App()
         {
             this.InitializeComponent();
-            // Manejo global de excepciones
+            // Global exception handling
 
             UnhandledException += (sender, e) =>
             {
-                // Verificar si la excepción no es nula antes de utilizarla.
+                // Check if the exception is not null before using it.
                 if (e.Exception != null)
                 {
-                    System.Diagnostics.Debug.WriteLine("Excepción no controlada:");
+                    System.Diagnostics.Debug.WriteLine("Unhandled exception:");
                     System.Diagnostics.Debug.WriteLine(e.Exception.ToString());
                     System.Diagnostics.Debug.WriteLine("Stack Trace:");
                     System.Diagnostics.Debug.WriteLine(e.Exception.StackTrace);
                 }
                 else
                 {
-                    System.Diagnostics.Debug.WriteLine("Excepción no controlada: (No se encontró el objeto de la excepción)");
+                    System.Diagnostics.Debug.WriteLine("Unhandled exception: (Exception object not found)");
                 }
 
-                // Si el depurador está adjunto, interrumpir la ejecución
+                // If the debugger is attached, break execution
                 if (System.Diagnostics.Debugger.IsAttached)
                 {
                     System.Diagnostics.Debugger.Break();

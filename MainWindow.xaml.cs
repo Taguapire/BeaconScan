@@ -10,7 +10,6 @@ using System.Threading;
 using System.Diagnostics;
 using Microsoft.UI;
 using Microsoft.UI.Windowing;
-using Windows.Foundation.Metadata; // Asegúrate de tener la referencia a Windows.UI.Core para el Dispatcher
 
 namespace BeaconScan
 {
@@ -25,17 +24,17 @@ namespace BeaconScan
         // Instancia de SshManager
         private SftpManager? _sftpManager;
 
-        private string? _selectedIp; // Variable global para almacenar la IP seleccionada
-        // Rutas base locales y remotas que puedes ajustar según tu entorno.
-        // Variables globales
+        private string? _selectedIp; // Global variable to store the selected IP
+                                     // Local and remote base paths you can adjust according to your environment.
+                                     // Global variables
         private string localDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
 
 
-        private string remoteDirectory = "~/"; // Valor por defecto que luego se reemplazará según la elección del usuario
+        private string remoteDirectory = "~/"; // Default value to be replaced based on user's selection
 
-        private CancellationTokenSource? _cancellationTokenSource; // Declarado como nullable.
-        
-        bool useSynScan = true; // O según el estado del checkbox
+        private CancellationTokenSource? _cancellationTokenSource; // Declared as nullable
+
+        bool useSynScan = true; // Based on the state of the checkbox
 
         public MainWindow(Windows.ApplicationModel.PackageVersion version)
         {
@@ -45,13 +44,15 @@ namespace BeaconScan
             baseIp = NetworkScanner.GetLocalBaseIP();
             baseIPTextBlock.Text = baseIp;
             bool useSynScan = UseSynScanCheckBox.IsChecked == true;
-            // Si la Base IP es "unknown", deshabilitamos el botón Scan (o todos los que consideres).
+            // If the base IP is "unknown", disable the Scan button (or any other relevant buttons)
             if (baseIp == "unknown")
             {
                 scanButton.IsEnabled = false;
-                // Opcionalmente, puedes deshabilitar otros botones relacionados:
-                // cancelButton.IsEnabled = false;  // Si asignaste nombre a Cancel, por ejemplo.
-                // Puedes también notificar al usuario, o cambiar el statusText:
+
+                // Optionally, disable other related buttons:
+                // cancelButton.IsEnabled = false;  // If you've assigned a name to the Cancel button, for instance.
+
+                // You can also notify the user or update the status text:
                 statusText.Text = "Network information not available.";
             }
         }
@@ -69,12 +70,13 @@ namespace BeaconScan
         {
             var titleBar = appWindow.TitleBar;
 
-            // Establecer el color de fondo
+            // Set the background color
             titleBar.BackgroundColor = Colors.Blue;
 
-            // Opcional: Establecer el color de primer plano
+            // Optional: Set the foreground color
             titleBar.ForegroundColor = Colors.White;
         }
+
 
         private async void OnScanButtonClicked(object sender, RoutedEventArgs e)
         {
@@ -95,16 +97,16 @@ namespace BeaconScan
 
             try
             {
-                // Obtenemos la base IP desde el TextBlock
+                // Retrieve the base IP from the TextBlock
                 baseIp = baseIPTextBlock.Text;
 
-                // Aquí se obtiene la lista de IpItem, con la propiedad IsEven asignada internamente.
+                // Get the list of IpItem objects, with the IsEven property assigned internally
 
                 CancellationToken cancellationToken = new();
 
                 var activeIps = await NetworkScanner.ScanNetworkAsync(baseIp, useSynScan, cancellationToken);
 
-                // Asignamos la colección como ItemsSource del ListView
+                // Assign the collection as the ItemsSource for the ListView
                 ipListView.ItemsSource = activeIps;
 
                 statusText.Text = "Scan completed.";
@@ -150,13 +152,13 @@ namespace BeaconScan
         private void UseSynScanCheckBox_Checked(object sender, RoutedEventArgs e)
         {
             useSynScan = true;
-            Console.WriteLine("SYN Scan activado.");
+            Console.WriteLine("SYN Scan enabled.");
         }
 
         private void UseSynScanCheckBox_Unchecked(object sender, RoutedEventArgs e)
         {
             useSynScan = false;
-            Console.WriteLine("SYN Scan desactivado.");
+            Console.WriteLine("SYN Scan disabled.");
         }
 
         private async void OnOpenWebViewButtonClicked(object sender, RoutedEventArgs e)
@@ -166,88 +168,89 @@ namespace BeaconScan
 
             if (!string.IsNullOrEmpty(_selectedIp) && portsListView.SelectedItem is PortDetails selectedPort)
             {
-                Debug.WriteLine($"IP seleccionada: {_selectedIp}");
-                Debug.WriteLine($"Puerto seleccionado: {selectedPort.PortNumber}");
+                Debug.WriteLine($"Selected IP: {_selectedIp}");
+                Debug.WriteLine($"Selected port: {selectedPort.PortNumber}");
 
-                // Decidir según el puerto
+                // Decide based on the selected port
                 switch (selectedPort.PortNumber)
                 {
                     case 80: // HTTP
                     case 8080: // HTTP Proxy
                         httpUrl = $"http://{_selectedIp}:{selectedPort.PortNumber}/";
-                        Debug.WriteLine($"Abriendo HTTP en: {httpUrl}");
+                        Debug.WriteLine($"Opening HTTP at: {httpUrl}");
                         httpWebViewWindow = new WebViewWindow(httpUrl);
                         httpWebViewWindow.Activate();
                         break;
                     case 443: // HTTPS Proxy
                         httpUrl = $"https://{_selectedIp}:{selectedPort.PortNumber}/";
-                        Debug.WriteLine($"Abriendo HTTP en: {httpUrl}");
+                        Debug.WriteLine($"Opening HTTP at: {httpUrl}");
                         httpWebViewWindow = new WebViewWindow(httpUrl);
                         httpWebViewWindow.Activate();
                         break;
 
-                        //case 554: // RTSP (Streaming)
-                        //var credentials = await ShowCredentialsDialogAsync(_selectedIp, selectedPort.PortNumber);
+                    // case 554: // RTSP (Streaming)
+                    // var credentials = await ShowCredentialsDialogAsync(_selectedIp, selectedPort.PortNumber);
 
-                        //if (credentials.Success) // Si el usuario ingresó credenciales
-                        //{
-                        //    string rtspUrl = $"rtsp://{credentials.Username}:{credentials.Password}@{_selectedIp}:{selectedPort.PortNumber}/live";
-                        //    Debug.WriteLine($"Intentando reproducir RTSP: {rtspUrl}");
-                        //
-                        // var rtspViewerWindow = new RtspViewerPage();
-                        // rtspViewerWindow.PlayStream(rtspUrl);
-                        // rtspViewerWindow.Activate();
-                        //}
-                        //else
-                        //{ 
-                        //Debug.WriteLine("El usuario canceló el ingreso de credenciales.");
-                        //statusText.Text = "Conexión RTSP cancelada por el usuario.";
-                        //}
-                        //break;
+                    // if (credentials.Success) // If the user entered credentials
+                    // {
+                    //     string rtspUrl = $"rtsp://{credentials.Username}:{credentials.Password}@{_selectedIp}:{selectedPort.PortNumber}/live";
+                    //     Debug.WriteLine($"Attempting to play RTSP: {rtspUrl}");
+
+                    //     var rtspViewerWindow = new RtspViewerPage();
+                    //     rtspViewerWindow.PlayStream(rtspUrl);
+                    //     rtspViewerWindow.Activate();
+                    // }
+                    // else
+                    // { 
+                    //     Debug.WriteLine("User canceled credential entry.");
+                    //     statusText.Text = "RTSP connection canceled by user.";
+                    // }
+                    // break;
+
 
                     case 3389: // RDP
-                               // Mostrar un cuadro de diálogo para ingresar el dominio/usuario y contraseña
+                               // Show a dialog to enter domain/username and password
                         var rdpCredentials = await ShowCredentialsDialogAsync(_selectedIp, selectedPort.PortNumber);
 
                         if (rdpCredentials.Success)
                         {
-                            Debug.WriteLine($"Iniciando conexión RDP con {_selectedIp}");
+                            Debug.WriteLine($"Starting RDP connection to {_selectedIp}");
 
-                            // Crear un archivo RDP dinámico
-                            string rdpFilePath = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "tempRdpConnection.rdp");
+                            // Create a temporary RDP file dynamically
+                            string rdpFilePath = Path.Combine(Path.GetTempPath(), "tempRdpConnection.rdp");
                             string rdpContent = $"full address:s:{_selectedIp}\nusername:s:{rdpCredentials.Username}\n";
 
-                            System.IO.File.WriteAllText(rdpFilePath, rdpContent);
+                            File.WriteAllText(rdpFilePath, rdpContent);
 
-                            // Abrir mstsc.exe con el archivo RDP generado
+                            // Launch mstsc.exe with the generated RDP file
                             try
                             {
-                                System.Diagnostics.Process.Start("mstsc.exe", rdpFilePath);
-                                statusText.Text = "Conexión RDP iniciada.";
+                                Process.Start("mstsc.exe", rdpFilePath);
+                                statusText.Text = "RDP connection started.";
                             }
                             catch (Exception ex)
                             {
-                                Debug.WriteLine($"Error al iniciar RDP: {ex.Message}");
-                                statusText.Text = "Error al iniciar la conexión RDP.";
+                                Debug.WriteLine($"Error launching RDP: {ex.Message}");
+                                statusText.Text = "Failed to start RDP connection.";
                             }
                         }
                         else
                         {
-                            Debug.WriteLine("El usuario canceló el ingreso de credenciales.");
-                            statusText.Text = "Conexión RDP cancelada por el usuario.";
+                            Debug.WriteLine("User canceled credential entry.");
+                            statusText.Text = "RDP connection canceled by user.";
                         }
                         break;
 
                     default:
-                        statusText.Text = "El puerto seleccionado no está configurado para manejarlo automáticamente.";
-                        Debug.WriteLine($"Puerto no manejado automáticamente: {selectedPort.PortNumber}");
+                        statusText.Text = "The selected port is not configured for automatic handling.";
+                        Debug.WriteLine($"Unhandled port: {selectedPort.PortNumber}");
                         break;
                 }
             }
             else
             {
-                statusText.Text = "Por favor, selecciona una IP y un puerto antes de continuar.";
-                Debug.WriteLine("No se seleccionó una IP o un puerto.");
+                statusText.Text = "Please select an IP address and a port before continuing.";
+                Debug.WriteLine("No IP address or port was selected.");
             }
         }
 
@@ -257,13 +260,13 @@ namespace BeaconScan
             var selectedItem = portsListView.SelectedItem;
             if (selectedItem != null && selectedItem is PortDetails selectedPort)
             {
-                statusText.Text = $"Elemento seleccionado: {selectedPort.ServiceName}";
-                Debug.WriteLine($"Seleccionado correctamente: {selectedPort.ServiceName}, Protocolo: {selectedPort.Protocol}, Puerto: {selectedPort.PortNumber}");
+                statusText.Text = $"Selected item: {selectedPort.ServiceName}";
+                Debug.WriteLine($"Successfully selected: {selectedPort.ServiceName}, Protocol: {selectedPort.Protocol}, Port: {selectedPort.PortNumber}");
             }
             else
             {
-                statusText.Text = "No se seleccionó ningún elemento.";
-                System.Diagnostics.Debug.WriteLine("El `SelectedItem` es null o no es del tipo PortDetails.");
+                statusText.Text = "No item was selected.";
+                System.Diagnostics.Debug.WriteLine("`SelectedItem` is null or not of type PortDetails.");
             }
         }
 
@@ -274,16 +277,16 @@ namespace BeaconScan
 
         private async void OnIpSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (ipListView.SelectedItem is IpItem selectedItem) // Ahora se verifica si es IpItem
+            if (ipListView.SelectedItem is IpItem selectedItem) // Now verifies if it's an IpItem
             {
-                // Se extrae la dirección IP del objeto seleccionado.
+                // Extract the IP address from the selected object
                 string selectedIp = selectedItem.IpAddress;
-                _selectedIp = selectedIp; // Actualizamos la IP seleccionada
-                Debug.WriteLine($"IP seleccionada (actualizada): {_selectedIp}");
+                _selectedIp = selectedIp; // Update the selected IP
+                Debug.WriteLine($"Selected IP (updated): {_selectedIp}");
 
                 _cancellationTokenSource = new CancellationTokenSource();
 
-                statusText.Text = $"Escaneando puertos para {selectedIp}...";
+                statusText.Text = $"Scanning ports for {selectedIp}...";
                 progressRing.IsActive = true;
                 progressRing.Visibility = Visibility.Visible;
                 scanButton.IsEnabled = false;
@@ -301,10 +304,10 @@ namespace BeaconScan
 
                     foreach (var port in openPorts)
                     {
-                        // Encontramos información del puerto usando PortRegistry
+                        // Find port information using PortRegistry
                         var portInfo = portRegistry.FindByPortNumber(port.PortNumber);
 
-                        // Convertimos PortInfo a PortDetails
+                        // Convert PortInfo to PortDetails
                         var portDetails = new PortDetails
                         {
                             Protocol = portInfo.Protocol,
@@ -312,17 +315,17 @@ namespace BeaconScan
                             ServiceName = portInfo.ServiceName
                         };
 
-                        // Agregamos el PortDetails al ListView
+                        // Add the PortDetails to the ListView
                         portsListView.Items.Add(portDetails);
-                        Debug.WriteLine($"Agregado a portsListView: {portDetails.ServiceName}");
+                        Debug.WriteLine($"Added to portsListView: {portDetails.ServiceName}");
                     }
 
-                    statusText.Text = "Escaneo de puertos completado.";
+                    statusText.Text = "Port scan completed.";
                 }
                 catch (OperationCanceledException)
                 {
                     portsListView.Items.Clear();
-                    statusText.Text = "Escaneo de puertos cancelado.";
+                    statusText.Text = "Port scan canceled.";
                 }
                 catch (Exception ex)
                 {
@@ -341,24 +344,20 @@ namespace BeaconScan
             }
             else
             {
-                Debug.WriteLine("No se seleccionó ninguna IP.");
-                _selectedIp = null; // Reinicia la variable si no hay selección
+                Debug.WriteLine("No IP was selected.");
+                _selectedIp = null; // Reset the variable if no selection exists
             }
         }
-
 
         private void OnCancelarButtonClicked(object sender, RoutedEventArgs e)
         {
             if (_cancellationTokenSource != null)
             {
                 _cancellationTokenSource.Cancel();
-                statusText.Text = "Cancelando operación...";
+                statusText.Text = "Cancelling operation...";
             }
         }
 
-        // Instancia de SshManager
-        // Maneja la conexión SSH
-        // Evento para conectar vía SSH
         private void OnConnectSSH(object sender, RoutedEventArgs e)
         {
             string host = hostTextBox.Text;
@@ -367,7 +366,7 @@ namespace BeaconScan
 
             if (string.IsNullOrEmpty(host) || string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password))
             {
-                statusText.Text = "Por favor, completa todos los campos.";
+                statusText.Text = "Please complete all fields.";
                 return;
             }
 
@@ -375,36 +374,36 @@ namespace BeaconScan
             {
                 _sshManager = new SshManager(host, username, password);
                 _sshManager.Connect();
-                // Inicia el shell interactivo y registra el callback para actualizar la salida del terminal.
+                // Starts the interactive shell and registers the callback to update the terminal output.
                 _sshManager.StartInteractiveShell(AppendSSHOutput);
-                statusText.Text = $"Conectado a {host}";
+                statusText.Text = $"Connected to {host}";
             }
             catch (Exception ex)
             {
-                statusText.Text = $"Error al conectar: {ex.Message}";
+                statusText.Text = $"Connection error: {ex.Message}";
             }
         }
 
-        // Callback que se invoca cada vez que la shell recibe datos.
-        // En WinUI, se utiliza DispatcherQueue para actualizar la UI.
+        // Callback invoked each time the shell receives data.
+        // In WinUI, DispatcherQueue is used to update the UI from a background thread.
         private void AppendSSHOutput(string data)
         {
-            // Usamos DispatcherQueue para asegurarnos de actualizar el TextBlock en el hilo UI.
+            // We use DispatcherQueue to ensure the TextBlock is updated on the UI thread.
             DispatcherQueue.TryEnqueue(() =>
             {
                 sshOutputTextBlock.Text += data;
-                // Si usas un ScrollViewer para el terminal, también puedes hacer scroll al final:
+                // If you're using a ScrollViewer for the terminal, you can also scroll to the end:
                 terminalScrollViewer.UpdateLayout();
                 terminalScrollViewer.ChangeView(null, terminalScrollViewer.ExtentHeight, null);
             });
         }
 
-        // Evento para enviar un comando desde el control del terminal.
+        // Event to send a command from the terminal control.
         private void OnSendCommand(object sender, RoutedEventArgs e)
         {
             if (_sshManager == null)
             {
-                statusText.Text = "No existe una conexión SSH activa.";
+                statusText.Text = "No active SSH connection.";
                 return;
             }
 
@@ -416,7 +415,7 @@ namespace BeaconScan
             }
         }
 
-        // Evento para conectar vía FTP/SFTP
+        // Event to connect via FTP/SFTP
         private async void OnConnectFTP(object sender, RoutedEventArgs e)
         {
             string host = ftpHostTextBox.Text;
@@ -424,85 +423,86 @@ namespace BeaconScan
             string password = ftpPasswordBox.Password;
             string remoteDir = "";
 
-            Console.WriteLine($"Entrando a conectar vía SFTP");
+            Console.WriteLine("Starting SFTP connection attempt...");
             if (string.IsNullOrEmpty(host) || string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password))
             {
-                UpdateStatus("Por favor, completa todos los campos.");
+                UpdateStatus("Please complete all fields.");
                 return;
             }
 
             try
             {
-                // 1. Conexión SSH para obtener el directorio predeterminado
+                // 1. SSH connection to retrieve user's default directory
                 if (_sshManager == null)
                 {
                     _sshManager = new SshManager(host, username, password);
-                    _sshManager.Connect(); // Establecer conexión SSH
-                    Console.WriteLine($"Conexión SSH exitosa a {host}");
+                    _sshManager.Connect(); // Establish SSH connection
+                    Console.WriteLine($"SSH connection successful to {host}");
                 }
 
-                // 2. Obtener el directorio predeterminado del usuario vía SSH
-                remoteDir = _sshManager.ExecuteCommand("pwd").Trim(); // Ejecutar el comando 'pwd'
+                // 2. Get the default directory via SSH
+                remoteDir = _sshManager.ExecuteCommand("pwd").Trim(); // Execute 'pwd'
                 remoteDirectory = remoteDir;
-                Console.WriteLine($"Directorio predeterminado capturado: {remoteDir}");
-                UpdateStatus($"Directorio predeterminado: {remoteDir}");
+                Console.WriteLine($"Captured default directory: {remoteDir}");
+                UpdateStatus($"Default directory: {remoteDir}");
 
-                // 3. Conexión SFTP utilizando las credenciales SSH
+                // 3. SFTP connection using the same SSH credentials
                 _sftpManager = new SftpManager(host, username, password);
                 await _sftpManager.ConnectAsync();
-                UpdateStatus($"Conectado a {host} vía SFTP en el directorio: {remoteDir}");
+                UpdateStatus($"Connected to {host} via SFTP in directory: {remoteDir}");
 
-                // 4. Cargar archivos locales y remotos
+                // 4. Load local and remote files
                 await LoadRemoteFiles(remoteDir);
                 await LoadLocalFiles(localDirectory);
             }
             catch (Exception ex)
             {
-                UpdateStatus($"Error al conectar SFTP: {ex.Message}");
+                UpdateStatus($"SFTP connection error: {ex.Message}");
             }
         }
 
-        // Función para actualizar el ListBox con archivos remotos
+        // Function to update the ListBox with remote files
         private async Task LoadRemoteFiles(string remotePath)
         {
             if (_sftpManager == null)
             {
-                UpdateStatus("El módulo SFTP no está conectado.");
+                UpdateStatus("SFTP module is not connected.");
                 return;
             }
 
             try
             {
-                // Obtener la lista remota con FileItem
+                // Retrieve the remote file list as FileItem objects
                 var remoteFiles = await _sftpManager.GetRemoteFileListAsync(remotePath);
 
-                // Asignar zebra striping: recorrer la lista y asignar IsEven para cada valor
+                // Apply zebra striping by assigning IsEven for each item
                 for (int i = 0; i < remoteFiles.Count; i++)
                 {
                     remoteFiles[i].IsEven = (i % 2 == 0);
                 }
 
-                // Asignar los datos al ListBox
+                // Bind the list to the ListBox
                 remoteDirListBox.ItemsSource = remoteFiles;
             }
             catch (Exception ex)
             {
-                UpdateStatus($"Error al obtener archivos remotos: {ex.Message}");
+                UpdateStatus($"Failed to retrieve remote files: {ex.Message}");
             }
         }
 
+        // Function to load local files and populate the ListBox
         private async Task LoadLocalFiles(string localPath)
         {
             try
             {
-                // Obtenemos la lista local incluyendo el directorio padre ".."
+                // Fetch the local file list, including the parent directory ".."
                 var localFiles = await Task.Run(() =>
                 {
                     var files = LocalFileHelper.GetLocalFileList(localPath).ToList();
 
-                    // Agregar ".." como el primer elemento para navegar hacia atrás
+                    // Add ".." as the first item for navigation (unless already at root)
                     var fileItems = new List<FileItem>();
-                    if (localPath != Path.GetPathRoot(localPath)) // No agregar ".." en la raíz
+                    if (localPath != Path.GetPathRoot(localPath))
                     {
                         fileItems.Add(new FileItem
                         {
@@ -511,94 +511,93 @@ namespace BeaconScan
                         });
                     }
 
-                    fileItems.AddRange(files); // Agregar el resto de los archivos/directorios
+                    fileItems.AddRange(files); // Add the rest of the files/directories
                     return fileItems;
                 });
 
-                // Configurar zebra striping: cada elemento obtiene IsEven en función del índice
+                // Apply zebra striping: assign IsEven based on the index
                 for (int i = 0; i < localFiles.Count; i++)
                 {
                     localFiles[i].IsEven = (i % 2 == 0);
                 }
 
-                // Asignar al ListBox
+                // Bind the result to the ListBox
                 localDirListBox.ItemsSource = localFiles;
             }
             catch (Exception ex)
             {
-                UpdateStatus($"Error al obtener archivos locales: {ex.Message}");
+                UpdateStatus($"Failed to retrieve local files: {ex.Message}");
             }
         }
 
-
-        // Evento para subir archivo (de local a remoto)
+        // Event to upload a file (from local to remote)
         private async void OnUploadFile(object sender, RoutedEventArgs e)
         {
             if (localDirListBox.SelectedItem == null)
             {
-                UpdateStatus("Selecciona un archivo del listado local.");
+                UpdateStatus("Please select a file from the local list.");
                 return;
             }
 
 #pragma warning disable CS8600 // Converting null literal or possible null value to non-nullable type.
             string selectedFile = localDirListBox.SelectedItem.ToString();
-#pragma warning restore CS8600 // Converting null literal or possible null value to non-nullable type.
+#pragma warning restore CS8600
 #pragma warning disable CS8604 // Possible null reference argument.
             string localFilePath = Path.Combine(localDirectory, selectedFile);
-#pragma warning restore CS8604 // Possible null reference argument.
+#pragma warning restore CS8604
             string remoteFilePath = remoteDirectory.TrimEnd('/') + "/" + selectedFile;
 
-            progressRing.IsActive = true; // Mostrar indicador 
+            progressRing.IsActive = true; // Show progress indicator
             try
             {
 #pragma warning disable CS8602 // Dereference of a possibly null reference.
                 await _sftpManager.UploadFileAsync(localFilePath, remoteFilePath);
-#pragma warning restore CS8602 // Dereference of a possibly null reference.
-                UpdateStatus($"Archivo '{selectedFile}' subido correctamente.");
+#pragma warning restore CS8602
+                UpdateStatus($"File '{selectedFile}' uploaded successfully.");
                 await LoadRemoteFiles(remoteDirectory);
             }
             catch (Exception ex)
             {
-                UpdateStatus($"Error al subir el archivo: {ex.Message}");
+                UpdateStatus($"Error uploading file: {ex.Message}");
             }
             finally
             {
-                progressRing.IsActive = false; // Ocultar indicador
+                progressRing.IsActive = false; // Hide progress indicator
             }
         }
 
-
-        // Evento para descargar archivo (de remoto a local)
+        // Event to download a file (from remote to local)
         private async void OnDownloadFile(object sender, RoutedEventArgs e)
         {
             if (remoteDirListBox.SelectedItem == null)
             {
-                UpdateStatus("Selecciona un archivo del listado remoto.");
+                UpdateStatus("Please select a file from the remote list.");
                 return;
             }
 
 #pragma warning disable CS8600 // Converting null literal or possible null value to non-nullable type.
             string selectedFile = remoteDirListBox.SelectedItem.ToString();
-#pragma warning restore CS8600 // Converting null literal or possible null value to non-nullable type.
+#pragma warning restore CS8600
             string remoteFilePath = remoteDirectory.TrimEnd('/') + "/" + selectedFile;
 #pragma warning disable CS8604 // Possible null reference argument.
             string localFilePath = Path.Combine(localDirectory, selectedFile);
-#pragma warning restore CS8604 // Possible null reference argument.
+#pragma warning restore CS8604
 
             try
             {
 #pragma warning disable CS8602 // Dereference of a possibly null reference.
                 await _sftpManager.DownloadFileAsync(remoteFilePath, localFilePath);
-#pragma warning restore CS8602 // Dereference of a possibly null reference.
-                UpdateStatus($"Archivo '{selectedFile}' descargado correctamente.");
+#pragma warning restore CS8602
+                UpdateStatus($"File '{selectedFile}' downloaded successfully.");
                 await LoadLocalFiles(localDirectory);
             }
             catch (Exception ex)
             {
-                UpdateStatus($"Error al descargar el archivo: {ex.Message}");
+                UpdateStatus($"Error downloading file: {ex.Message}");
             }
         }
 
+        // Event triggered on double-tap in the remote directory ListBox
         private void RemoteDirListBox_DoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
         {
             if (remoteDirListBox.SelectedItem is FileItem selectedItem)
@@ -607,83 +606,82 @@ namespace BeaconScan
                 {
                     if (selectedItem.Name == "..")
                     {
-                        // Intentar calcular el directorio padre
+                        // Attempt to calculate the parent directory
                         var parentDirectory = Path.GetDirectoryName(remoteDirectory.TrimEnd('/'));
                         if (string.IsNullOrEmpty(parentDirectory) || parentDirectory == "/")
                         {
-                            UpdateStatus("No puedes retroceder más allá del directorio raíz.");
+                            UpdateStatus("You cannot go above the root directory.");
                             parentDirectory = "/";
                         }
 
-                        // Navegar al directorio padre
+                        // Navigate to the parent directory
                         remoteDirectory = Path.Combine(parentDirectory, "").Replace('\\', '/');
                     }
                     else if (selectedItem.Type == "D")
                     {
-                        // Navegar al directorio seleccionado
+                        // Navigate into the selected directory
 #pragma warning disable CS8604 // Possible null reference argument.
                         remoteDirectory = Path.Combine(remoteDirectory, selectedItem.Name).Replace('\\', '/');
-#pragma warning restore CS8604 // Possible null reference argument.
+#pragma warning restore CS8604
                     }
 
-                    // Recargar archivos del nuevo directorio
+                    // Reload files for the new directory
                     _ = LoadRemoteFiles(remoteDirectory);
                 }
                 catch (Exception ex)
                 {
-                    UpdateStatus($"Error al navegar en directorios remotos: {ex.Message}");
+                    UpdateStatus($"Error navigating remote directories: {ex.Message}");
                 }
             }
         }
 
 
+        // Event triggered on double-tap in the local directory ListBox
         private void LocalDirListBox_DoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
         {
             if (localDirListBox.SelectedItem is FileItem selectedItem)
             {
                 if (selectedItem.Name == "..")
                 {
-                    // Volver al directorio anterior
+                    // Navigate to the parent directory (stay in current if null)
                     localDirectory = Path.GetDirectoryName(localDirectory) ?? localDirectory;
                 }
                 else if (selectedItem.Type == "D")
                 {
-                    // Navegar al directorio seleccionado
+                    // Navigate into the selected directory
 #pragma warning disable CS8604 // Possible null reference argument.
                     localDirectory = Path.Combine(localDirectory, selectedItem.Name);
-#pragma warning restore CS8604 // Possible null reference argument.
+#pragma warning restore CS8604
                 }
 
-                // Cargar los archivos del nuevo directorio
+                // Load files from the new local directory
                 _ = LoadLocalFiles(localDirectory);
             }
         }
 
-
-
-
+        // Navigates one level up in the remote directory hierarchy
         private void GoToParentRemoteDirectory()
         {
-            if (remoteDirectory != "/") // Evitar salir de la raíz
+            if (remoteDirectory != "/") // Prevent navigating above root
             {
                 remoteDirectory = Path.GetDirectoryName(remoteDirectory.TrimEnd('/')) ?? "/";
                 _ = LoadRemoteFiles(remoteDirectory);
             }
         }
 
+        // Navigates one level up in the local directory hierarchy
         private void GoToParentLocalDirectory()
         {
-            if (localDirectory != Path.GetPathRoot(localDirectory)) // Evitar salir de la raíz local
+            if (localDirectory != Path.GetPathRoot(localDirectory)) // Prevent navigating above root
             {
 #pragma warning disable CS8601 // Possible null reference assignment.
                 localDirectory = Path.GetDirectoryName(localDirectory);
-#pragma warning restore CS8601 // Possible null reference assignment.
+#pragma warning restore CS8601
 #pragma warning disable CS8604 // Possible null reference argument.
                 _ = LoadLocalFiles(localDirectory);
-#pragma warning restore CS8604 // Possible null reference argument.
+#pragma warning restore CS8604
             }
         }
-
 
 
         private void UpdateStatus(string message)
@@ -691,60 +689,58 @@ namespace BeaconScan
             statusText.Text = message;
         }
 
+        // General exception handler to update status based on the operation
         private void HandleException(Exception ex, string operation)
         {
-            UpdateStatus($"Error durante {operation}: {ex.Message}");
+            UpdateStatus($"Error during {operation}: {ex.Message}");
         }
 
+        // Displays a dialog to prompt the user for a remote directory path
         private async Task<string?> ShowDirectoryDialogAsync()
         {
-            // Crear el ContentDialog
             var dialog = new ContentDialog
             {
-                Title = "Seleccionar Directorio Remoto",
+                Title = "Select Remote Directory",
                 Content = new StackPanel
                 {
                     Children =
             {
-                new TextBlock { Text = "Escribe el directorio remoto al que deseas conectarte:" },
+                new TextBlock { Text = "Enter the remote directory you wish to connect to:" },
                 new TextBox { Name = "RemoteDirTextBox", PlaceholderText = "~/", Margin = new Thickness(0, 10, 0, 0) }
             }
                 },
-                PrimaryButtonText = "Aceptar",
-                CloseButtonText = "Cancelar",
+                PrimaryButtonText = "Accept",
+                CloseButtonText = "Cancel",
                 DefaultButton = ContentDialogButton.Primary
             };
 
-            // Asegurar que el XamlRoot no es nulo
+            // Ensure the XamlRoot is properly initialized
             if (this.Content?.XamlRoot == null)
             {
-                Console.WriteLine("Advertencia: XamlRoot es nulo. Verifica la inicialización de la ventana principal.");
+                Console.WriteLine("Warning: XamlRoot is null. Check main window initialization.");
                 return null;
             }
 
-            // Asignar el XamlRoot de la ventana principal al diálogo
             dialog.XamlRoot = this.Content.XamlRoot;
 
             try
             {
-                // Mostrar el diálogo y capturar el resultado
                 var result = await dialog.ShowAsync();
 
                 if (result == ContentDialogResult.Primary)
                 {
-                    // Obtener el valor del TextBox
+                    // Retrieve the user input from the TextBox
                     var textBox = (TextBox)((StackPanel)dialog.Content).Children[1];
                     return textBox.Text.Trim();
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error al mostrar el diálogo: {ex.Message}");
+                Console.WriteLine($"Failed to display dialog: {ex.Message}");
             }
 
-            // Si se cancela o ocurre un error
+            // Return null if canceled or an error occurred
             return null;
         }
-
     }
 }
